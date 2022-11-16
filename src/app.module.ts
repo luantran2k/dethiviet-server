@@ -6,11 +6,7 @@ import { ExamModule } from './exam/exam.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
-  imports: [
-    ExamModule,
-    PrismaModule,
-    MulterModule.register({ dest: './uploads' }),
-  ],
+  imports: [ExamModule, PrismaModule],
   controllers: [AppController],
   providers: [AppService],
 })

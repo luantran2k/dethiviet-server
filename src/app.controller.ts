@@ -22,6 +22,6 @@ export class AppController {
   @Post('file')
   @UseInterceptors(FileInterceptor('file'))
   uploadFile(@UploadedFile() file: Express.Multer.File) {
-    return 'UploadedFile api';
+    return 'Upload file: ' + file.filename;
   }
 }
