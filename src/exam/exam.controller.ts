@@ -9,8 +9,10 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { AccessTokenGuard } from 'src/auth/accessToken.guard';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
 import { ExamEntity } from './entities/exam.entity';
@@ -48,6 +50,7 @@ export class ExamController {
     );
   }
 
+  //@UseGuards(AccessTokenGuard)
   @Get(':id')
   @ApiResponse({ type: ExamEntity })
   findOne(@Param('id') id: string) {

@@ -11,9 +11,14 @@ datasource db {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  username String
-  exams    Exam[]
+  id           Int     @id @default(autoincrement())
+  username     String  @unique
+  profileImg   String?
+  password     String
+  email        String?
+  refreshToken String?
+  name         String?
+  exams        Exam[]
 }
 
 model Exam {

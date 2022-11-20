@@ -5,9 +5,17 @@ import { AppService } from './app.service';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { ExamModule } from './exam/exam.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
-  imports: [ExamModule, PrismaModule, CloudinaryModule],
+  imports: [
+    ExamModule,
+    PrismaModule,
+    CloudinaryModule,
+    AuthModule,
+    UsersModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

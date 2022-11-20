@@ -1,28 +1,23 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  UploadedFile,
-  UploadedFiles,
-  UseInterceptors,
-} from '@nestjs/common';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { Controller, Get, UseGuards } from '@nestjs/common';
 import { AppService } from './app.service';
-import { CloudinaryService } from './cloudinary/cloudinary.service';
+import { AccessTokenGuard } from './auth/accessToken.guard';
+import { AuthService } from './auth/auth.service';
 
 @Controller()
 export class AppController {
   constructor(
-    private readonly appService: AppService
+    private readonly appService: AppService,
+    private authService: AuthService,
   ) {}
 
   @Get()
   getHello(): string {
     return this.appService.getHello();
+  }
+
+  @UseGuards(AccessTokenGuard)
+  @Get('profile')
+  getProfile() {
+    return 'Return profile';
   }
 }

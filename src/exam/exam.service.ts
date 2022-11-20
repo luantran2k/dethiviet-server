@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import prismaUltis from 'src/Utils/prismaUltis';
 import { PrismaService } from './../prisma/prisma.service';
@@ -56,6 +56,10 @@ export class ExamService {
     year?: number,
     grade?: string,
   ) {
+    if (year < 1990 || year > 2100)
+      throw new BadRequestException(
+        'Năm không hợp lệ, năm phải trong khoảng 1990 - 2100',
+      );
     return this.prisma.exam.findMany({
       skip: page * quantity,
       take: quantity,
