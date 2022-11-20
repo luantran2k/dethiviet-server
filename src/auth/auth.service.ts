@@ -6,6 +6,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { userInfo } from 'os';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { UsersService } from 'src/users/users.service';
 import { AuthDto } from './dto/auth.dto';
@@ -35,7 +36,8 @@ export class AuthService {
     });
     const tokens = await this.getTokens(newUser.id, newUser.username);
     await this.updateRefreshToken(newUser.id, tokens.refreshToken);
-    return tokens;
+    const { password, refreshToken: rfToken, ...userInfo } = newUser;
+    return { ...tokens, userInfo };
   }
 
   async signIn(data: AuthDto) {
@@ -47,7 +49,8 @@ export class AuthService {
       throw new BadRequestException('Password is incorrect');
     const tokens = await this.getTokens(user.id, user.username);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
-    return tokens;
+    const { password, refreshToken: rfToken, ...userInfo } = user;
+    return { ...tokens, userInfo };
   }
 
   async logout(userId: number) {
@@ -113,6 +116,7 @@ export class AuthService {
     }
     const tokens = await this.getTokens(user.id, user.username);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
-    return tokens;
+    const { password, refreshToken: rfToken, ...userInfo } = user;
+    return { ...tokens, userInfo };
   }
 }

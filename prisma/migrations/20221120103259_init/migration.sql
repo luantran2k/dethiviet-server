@@ -2,6 +2,11 @@
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
     "username" TEXT NOT NULL,
+    "profileImg" TEXT,
+    "password" TEXT NOT NULL,
+    "email" TEXT,
+    "refreshToken" TEXT,
+    "name" TEXT,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -62,6 +67,9 @@ CREATE TABLE "Answer" (
 
     CONSTRAINT "Answer_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
 -- AddForeignKey
 ALTER TABLE "Exam" ADD CONSTRAINT "Exam_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
