@@ -1,4 +1,4 @@
-import IMultiSelectQuestion from '../IQuestion/IMultiSelect';
+import IMultiSelectQuestion from '../../questions/interfaces/IMultiSelect';
 import IPart from './IPart';
 
 export default interface IMultiSelectPart extends IPart {

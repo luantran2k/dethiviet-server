@@ -7,44 +7,10 @@ import { UpdateExamDto } from './dto/update-exam.dto';
 
 @Injectable()
 export class ExamService {
-  private readonly includeExamData = {
-    parts: {
-      select: {
-        id: true,
-        clientId: true,
-        title: true,
-        description: true,
-        numberOfAnswers: true,
-        totalPoints: true,
-        type: true,
-        questions: {
-          select: {
-            id: true,
-            clientId: true,
-            title: true,
-            description: true,
-            explain: true,
-            answers: {
-              select: {
-                id: true,
-                clientId: true,
-                isTrue: true,
-                value: true,
-              },
-            },
-          },
-        },
-      },
-    },
-  };
-
   constructor(private prisma: PrismaService) {}
   create(createExamDto: CreateExamDto) {
     return this.prisma.exam.create({
-      data: prismaUltis.objectToPrismaCreate(
-        createExamDto,
-      ) as Prisma.ExamCreateInput,
-      include: this.includeExamData,
+      data: createExamDto,
     });
   }
 
@@ -94,17 +60,25 @@ export class ExamService {
 
   findOne(id: number) {
     return this.prisma.exam.findUniqueOrThrow({
-      where: { id: id },
-      include: this.includeExamData,
+      where: { id },
+      include: {
+        parts: {
+          include: {
+            questions: {
+              include: {
+                answers: true,
+              },
+            },
+          },
+        },
+      },
     });
   }
 
   update(id: number, updateExamDto: UpdateExamDto) {
-    const data = prismaUltis.objectToPrismaUpdate(updateExamDto, id);
     return this.prisma.exam.update({
-      where: { id: id },
-      data,
-      include: this.includeExamData,
+      where: { id },
+      data: updateExamDto,
     });
   }
 

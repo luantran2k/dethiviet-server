@@ -1,4 +1,4 @@
-import PartEntity from 'src/exam/entities/part.entity';
+import PartEntity from 'src/parts/entities/part.entity';
 
 const prismaUltis = {
   arrayToPrismaInput: (array: []) => {

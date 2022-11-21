@@ -1,4 +1,4 @@
-import { PartType } from '../IPart/IPart';
+import { PartType } from '../../../parts/interfaces/IPart';
 
 export default interface IExam {
   id?: number;

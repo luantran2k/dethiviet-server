@@ -1,4 +1,4 @@
-import { QuestionType } from '../IQuestion/IQuestion';
+import { QuestionType } from '../../questions/interfaces/IQuestion';
 import IMultipleChoicePart from './IMultipleChoice';
 import IMultiSelectPart from './IMultiSelect';
 

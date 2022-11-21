@@ -1,17 +1,13 @@
-import IMultipleChoicePart from '../entities/IPart/IMultipleChoice';
-import IPart, { PartType } from '../entities/IPart/IPart';
-import PartEntity from '../entities/part.entity';
-
 export class CreateExamDto {
-  id?: number;
   ownerId: number;
   title: string;
-  isPublic: boolean;
-  year: number;
-  time: number;
+  isPublic?: boolean;
+  duration?: number;
+  type?: string;
+  examName?: string;
+  date?: Date;
   description?: string;
   subjectName?: string;
   grade?: string;
-  schoolName?: string;
-  parts?: PartEntity[];
+  publishers?: string;
 }

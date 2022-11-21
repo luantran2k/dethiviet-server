@@ -7,6 +7,9 @@ import { ExamModule } from './exam/exam.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { AnswersModule } from './answers/answers.module';
+import { QuestionsModule } from './questions/questions.module';
+import { PartsModule } from './parts/parts.module';
 
 @Module({
   imports: [
@@ -15,6 +18,9 @@ import { UsersModule } from './users/users.module';
     CloudinaryModule,
     AuthModule,
     UsersModule,
+    AnswersModule,
+    QuestionsModule,
+    PartsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

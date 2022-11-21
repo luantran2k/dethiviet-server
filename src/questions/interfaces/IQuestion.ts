@@ -1,4 +1,4 @@
-import { AnswerType } from '../IAnswer/IAnswer';
+import { AnswerType } from '../../answers/interfaces/IAnswer';
 import IMultipleChoiceQuestion from './IMultipleChoice';
 import IMultiSelectQuestion from './IMultiSelect';
 
