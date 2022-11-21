@@ -4,14 +4,18 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
 import { use } from 'passport';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cloudinary: CloudinaryService,
+  ) {}
 
-  create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto) {
     return this.prisma.user.create({
-      data: createUserDto,
+      data: { ...createUserDto, profileImg: await this.getRandomAvatar() },
     });
   }
 
@@ -33,5 +37,17 @@ export class UsersService {
 
   remove(id: number) {
     return this.prisma.user.delete({ where: { id } });
+  }
+
+  async getRandomAvatar() {
+    const fileInfo = await this.cloudinary.getAllFileInFolder(
+      'dethiviet/image/avatar/default',
+      {
+        resourceType: 'image',
+      },
+    );
+    const numberOfFiles = fileInfo.total_count;
+    const randomNumber = Math.floor(Math.random() * numberOfFiles);
+    return fileInfo.resources[randomNumber].url;
   }
 }

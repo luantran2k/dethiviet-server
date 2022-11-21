@@ -31,4 +31,17 @@ export class CloudinaryService {
   async uploadFiles(files: Express.Multer.File[]) {
     return 'upload Files';
   }
+
+  async getAllFileInFolder(
+    folder: string,
+    options?: { resourceType?: string },
+  ) {
+    return await v2.search
+      .expression(
+        `folder:${folder} ${
+          options.resourceType && `AND resource_type:${options.resourceType}`
+        }`,
+      )
+      .execute();
+  }
 }
