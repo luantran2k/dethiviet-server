@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseBoolPipe,
   ParseIntPipe,
   Patch,
   Post,
@@ -53,8 +54,14 @@ export class ExamController {
   //@UseGuards(AccessTokenGuard)
   @Get(':id')
   @ApiResponse({ type: ExamEntity })
-  findOne(@Param('id') id: string) {
-    return this.examService.findOne(+id);
+  findOne(
+    @Param('id') id: string,
+    @Query('includePart', new DefaultValuePipe(false), ParseBoolPipe)
+    includePart?: boolean,
+    @Query('includeOwner', new DefaultValuePipe(false), ParseBoolPipe)
+    includeOwner?: boolean,
+  ) {
+    return this.examService.findOne(+id, includePart, includeOwner);
   }
 
   @Patch(':id')

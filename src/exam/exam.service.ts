@@ -36,6 +36,12 @@ export class ExamService {
         date: true,
         subjectName: true,
         grade: true,
+        owner: {
+          select: {
+            name: true,
+            username: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -43,6 +49,7 @@ export class ExamService {
       where: {
         title: {
           contains: title,
+          mode: 'insensitive',
         },
         subjectName: {
           contains: subjectName,
@@ -58,11 +65,19 @@ export class ExamService {
     });
   }
 
-  findOne(id: number) {
+  findOne(id: number, includePart: boolean, includeOwner: boolean) {
     return this.prisma.exam.findUniqueOrThrow({
       where: { id },
       include: {
-        parts: {
+        owner: includeOwner && {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            profileImg: true,
+          },
+        },
+        parts: includePart && {
           include: {
             questions: {
               include: {
