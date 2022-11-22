@@ -4,5 +4,6 @@ export class CreatePartDto {
   type: string;
   totalPoints: number;
   description?: string;
-  numberOfAnswers: number;
+  numberOfQuestions?: number;
+  numberOfAnswers?: number;
 }
