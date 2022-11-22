@@ -7,16 +7,37 @@ import { UpdateQuestionDto } from './dto/update-question.dto';
 export class QuestionsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(createQuestionDto: CreateQuestionDto) {
-    return this.prisma.question.create({ data: createQuestionDto });
+  async create(createQuestionDto: CreateQuestionDto) {
+    const { numberOfAnswers, ...question } = createQuestionDto;
+    const newQuestion = await this.prisma.question.create({ data: question });
+    if (numberOfAnswers) {
+      await this.prisma.answer.createMany({
+        data: Array(numberOfAnswers).fill({ questionId: newQuestion.id }),
+      });
+      return this.findOne(newQuestion.id);
+    }
+    return newQuestion;
   }
 
   findAll() {
-    return this.prisma.question.findMany();
+    return this.prisma.question.findMany({
+      orderBy: {
+        id: 'asc',
+      },
+    });
   }
 
   findOne(id: number) {
-    return this.prisma.question.findFirst({ where: { id } });
+    return this.prisma.question.findFirst({
+      where: { id },
+      include: {
+        answers: {
+          orderBy: {
+            id: 'asc',
+          },
+        },
+      },
+    });
   }
 
   update(id: number, updateQuestionDto: UpdateQuestionDto) {

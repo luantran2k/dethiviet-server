@@ -3,4 +3,5 @@ export class CreateQuestionDto {
   title?: string;
   description?: string;
   explain?: string;
+  numberOfAnswers?: number;
 }

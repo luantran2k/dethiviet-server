@@ -10,7 +10,6 @@ export class PartsService {
   async create(createPartDto: CreatePartDto) {
     const { numberOfQuestions, ...part } = createPartDto;
     //create Part
-    console.log('Part: ', part);
     const newPart = await this.prisma.part.create({ data: part });
 
     //Create questions
@@ -42,7 +41,11 @@ export class PartsService {
   }
 
   findAll() {
-    return this.prisma.part.findMany();
+    return this.prisma.part.findMany({
+      orderBy: {
+        id: 'asc',
+      },
+    });
   }
 
   findOne(id: number) {
@@ -50,8 +53,15 @@ export class PartsService {
       where: { id },
       include: {
         questions: {
+          orderBy: {
+            id: 'asc',
+          },
           include: {
-            answers: true,
+            answers: {
+              orderBy: {
+                id: 'asc',
+              },
+            },
           },
         },
       },

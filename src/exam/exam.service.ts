@@ -78,10 +78,20 @@ export class ExamService {
           },
         },
         parts: includePart && {
+          orderBy: {
+            id: 'asc',
+          },
           include: {
             questions: {
+              orderBy: {
+                id: 'asc',
+              },
               include: {
-                answers: true,
+                answers: {
+                  orderBy: {
+                    id: 'asc',
+                  },
+                },
               },
             },
           },

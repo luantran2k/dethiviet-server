@@ -37,6 +37,11 @@ export class AnswersController {
     return this.answersService.update(+id, updateAnswerDto);
   }
 
+  @Patch()
+  updateManyTimes(@Body() updateAnswersDto: UpdateAnswerDto[]) {
+    return this.answersService.updateManyTimes(updateAnswersDto);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.answersService.remove(+id);

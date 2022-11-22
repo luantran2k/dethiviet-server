@@ -29,12 +29,12 @@ model Exam {
   isPublic    Boolean   @default(true)
   duration    Int?
   type        String?
-  examName    String?
+  examName    String?   @default("")
   date        DateTime?
-  description String?
-  subjectName String?
-  grade       String?
-  publishers  String?
+  description String?   @default("")
+  subjectName String?   @default("")
+  grade       String?   @default("")
+  publishers  String?   @default("")
   parts       Part[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime? @updatedAt
@@ -47,7 +47,7 @@ model Part {
   title           String
   type            String
   totalPoints     Int
-  description     String?
+  description     String?    @default("")
   numberOfAnswers Int?
   questions       Question[]
 }
@@ -56,9 +56,9 @@ model Question {
   id          Int      @id @default(autoincrement())
   part        Part     @relation(fields: [partId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   partId      Int
-  title       String?
-  description String?
-  explain     String?
+  title       String?  @default("")
+  description String?  @default("")
+  explain     String?  @default("")
   answers     Answer[]
 }
 
@@ -66,6 +66,6 @@ model Answer {
   id         Int      @id @default(autoincrement())
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   questionId Int
-  value      String?
-  isTrue     Boolean?
+  value      String?  @default("")
+  isTrue     Boolean? @default(false)
 }
