@@ -6,11 +6,21 @@ import {
   Patch,
   Param,
   Delete,
+  UseInterceptors,
+  UploadedFile,
+  UploadedFiles,
+  Query,
 } from '@nestjs/common';
 import { QuestionsService } from './questions.service';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { ApiTags } from '@nestjs/swagger';
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+  FilesInterceptor,
+} from '@nestjs/platform-express';
+import { query } from 'express';
 
 @ApiTags('questions')
 @Controller('questions')
@@ -43,5 +53,33 @@ export class QuestionsController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.questionsService.remove(+id);
+  }
+
+  @Patch(':id/audio')
+  @UseInterceptors(FileInterceptor('questionAudio'))
+  updateQuestionAudio(
+    @Param('id') id: string,
+    @UploadedFile() questionAudio: Express.Multer.File,
+  ) {
+    return this.questionsService.updateQuesitonAudio(+id, questionAudio);
+  }
+
+  @Delete(':id/audio')
+  deleteQuestionAudio(@Param('id') id: string) {
+    return this.questionsService.deleteQuesitonAudio(+id);
+  }
+
+  @Post(':id/image')
+  @UseInterceptors(FilesInterceptor('questionImages'))
+  addQuestionImage(
+    @Param('id') id: string,
+    @UploadedFiles() questionImages: Array<Express.Multer.File>,
+  ) {
+    return this.questionsService.addQuestionImages(+id, questionImages);
+  }
+
+  @Delete(':id/image')
+  deleteQuestionImage(@Param('id') id: string, @Query('url') url: string) {
+    return this.questionsService.deleteQuestionImage(+id, url);
   }
 }

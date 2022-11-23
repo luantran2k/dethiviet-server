@@ -2,15 +2,21 @@ import { Injectable } from '@nestjs/common';
 import { UploadApiResponse, UploadApiErrorResponse, v2 } from 'cloudinary';
 import * as toStream from 'buffer-to-stream';
 
+export type resourceType = 'image' | 'javascript' | 'css' | 'video' | 'raw';
+export interface UploadOptions {
+  folderName: string;
+}
+
 @Injectable()
 export class CloudinaryService {
   async uploadFile(
     file: Express.Multer.File,
-    options?: { folderName?: string },
+    options: UploadOptions,
   ): Promise<UploadApiResponse | UploadApiErrorResponse> {
     return new Promise((resolve, reject) => {
       const upload = v2.uploader.upload_stream(
         {
+          resource_type: 'auto',
           folder:
             process.env.CLOUDINARY_ROOT_FOLDER + '/' + options.folderName ||
             options.folderName,
@@ -24,12 +30,18 @@ export class CloudinaryService {
     });
   }
 
-  async removeFile(public_id: string) {
-    return await v2.uploader.destroy(public_id);
+  async removeFile(public_id: string, resource_type: resourceType) {
+    const res = await v2.uploader.destroy(public_id, {
+      resource_type: resource_type,
+    });
+    return res;
   }
 
-  async uploadFiles(files: Express.Multer.File[]) {
-    return 'upload Files';
+  uploadFiles(files: Express.Multer.File[], options: UploadOptions) {
+    const filesUpload = files.map((file) => {
+      return this.uploadFile(file, options);
+    });
+    return filesUpload;
   }
 
   async getAllFileInFolder(
