@@ -1,0 +1,17 @@
+-- AlterTable
+ALTER TABLE "Answer" ALTER COLUMN "value" DROP DEFAULT;
+
+-- AlterTable
+ALTER TABLE "Exam" ALTER COLUMN "examName" DROP DEFAULT,
+ALTER COLUMN "description" DROP DEFAULT,
+ALTER COLUMN "subjectName" DROP DEFAULT,
+ALTER COLUMN "grade" DROP DEFAULT,
+ALTER COLUMN "publishers" DROP DEFAULT;
+
+-- AlterTable
+ALTER TABLE "Part" ALTER COLUMN "description" DROP DEFAULT;
+
+-- AlterTable
+ALTER TABLE "Question" ALTER COLUMN "title" DROP DEFAULT,
+ALTER COLUMN "description" DROP DEFAULT,
+ALTER COLUMN "explain" DROP DEFAULT;
