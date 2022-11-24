@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import Ultis from 'src/Utils/ultis';
+import Ultis from 'src/Utils/Ultis';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 
