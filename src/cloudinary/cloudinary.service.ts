@@ -1,11 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { UploadApiResponse, UploadApiErrorResponse, v2 } from 'cloudinary';
+import {
+  UploadApiResponse,
+  UploadApiErrorResponse,
+  v2,
+  UploadApiOptions,
+} from 'cloudinary';
 import * as toStream from 'buffer-to-stream';
 
 export type resourceType = 'image' | 'javascript' | 'css' | 'video' | 'raw';
-export interface UploadOptions {
-  folderName: string;
-}
+export interface UploadOptions extends UploadApiOptions {}
 
 @Injectable()
 export class CloudinaryService {

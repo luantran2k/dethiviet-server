@@ -1,12 +1,9 @@
-import { Question } from '@prisma/client';
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import Ultis from 'src/Utils/ultis';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
-import { FileRespone } from 'src/cloudinary/interfaces/FileRespone';
-import Ultis from 'src/Utils/ultis';
-import { url } from 'inspector';
 
 @Injectable()
 export class QuestionsService {
@@ -54,26 +51,15 @@ export class QuestionsService {
           folderName: 'audio/questionAudios',
         })
       : undefined;
-    if (audioUpload.url) {
+    if (audioUpload.secure_url) {
       await this.deleteQuesitonAudio(id, false);
       await this.prisma.question.update({
         where: { id },
-        data: { questionAudio: audioUpload.url },
+        data: { questionAudio: audioUpload.secure_url },
       });
-      return audioUpload;
+      return { url: audioUpload.secure_url };
       //return { url: audioUpload.url };
     }
-  }
-
-  async deleteTest(publicId: string) {
-    // const res = await this.cloudinary.getAllFileInFolder(
-    //   'dethiviet/audio/questionAudios',
-    //   {
-    //     resourceType: 'video',
-    //   },
-    // );
-    // return { ...res };
-    return await this.cloudinary.removeFile(publicId, 'video');
   }
 
   async deleteQuesitonAudio(id: number, deleteInDB: boolean = true) {
@@ -112,7 +98,7 @@ export class QuestionsService {
       });
     });
     await Promise.all(res);
-    return imagesUploaded;
+    return { questionImages: (await this.findOne(id)).questionImages };
   }
 
   async deleteQuestionImage(id: number, deleteUrl: string) {
@@ -123,13 +109,13 @@ export class QuestionsService {
         Ultis.getPublicId(deleteUrl),
         'image',
       );
-      await this.prisma.question.update({
+      const questionUpdated = await this.prisma.question.update({
         where: { id },
         data: {
           questionImages: listUrl.filter((url) => url !== deleteUrl),
         },
       });
-      return res;
+      return { questionImages: questionUpdated.questionImages };
     }
   }
 

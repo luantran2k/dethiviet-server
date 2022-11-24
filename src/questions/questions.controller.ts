@@ -58,10 +58,12 @@ export class QuestionsController {
   @Patch(':id/audio')
   @UseInterceptors(FileInterceptor('questionAudio'))
   updateQuestionAudio(
-    @Param('id') id: string,
     @UploadedFile() questionAudio: Express.Multer.File,
+    @Param('id') id: string,
   ) {
-    return this.questionsService.updateQuesitonAudio(+id, questionAudio);
+    if (questionAudio)
+      return this.questionsService.updateQuesitonAudio(+id, questionAudio);
+    return { message: 'Lỗi trong quá trình tải file' };
   }
 
   @Delete(':id/audio')
