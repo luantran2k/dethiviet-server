@@ -1,4 +1,5 @@
 import { Exam } from '@prisma/client';
+import PartEntity from 'src/parts/entities/part.entity';
 
 export class ExamEntity implements Exam {
   id: number;
@@ -15,4 +16,5 @@ export class ExamEntity implements Exam {
   publishers: string;
   createdAt: Date;
   updatedAt: Date;
+  parts?: PartEntity[];
 }

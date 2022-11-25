@@ -1,12 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, Question } from '@prisma/client';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import Ultis from 'src/Utils/Ultis';
 import { CreatePartDto } from './dto/create-part.dto';
 import { UpdatePartDto } from './dto/update-part.dto';
 
 @Injectable()
 export class PartsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cloudinary: CloudinaryService,
+  ) {}
   async create(createPartDto: CreatePartDto) {
     const { numberOfQuestions, ...part } = createPartDto;
     //create Part
@@ -72,7 +77,42 @@ export class PartsService {
     return this.prisma.part.update({ where: { id }, data: updatePartDto });
   }
 
-  remove(id: number) {
+  async updatePartAudio(id: number, partAudio?: Express.Multer.File) {
+    const audioUpload = partAudio
+      ? await this.cloudinary.uploadFile(partAudio, {
+          folderName: 'audio/partAudios',
+        })
+      : undefined;
+    if (audioUpload.secure_url) {
+      await this.deletePartAudio(id, false);
+      await this.prisma.part.update({
+        where: { id },
+        data: { partAudio: audioUpload.secure_url },
+      });
+      return { url: audioUpload.secure_url };
+    }
+  }
+
+  async deletePartAudio(id: number, deleteInDB: boolean = true) {
+    const question = await this.findOne(id);
+    if (question.partAudio) {
+      const result = await this.cloudinary.removeFile(
+        Ultis.getPublicId(question.partAudio),
+        'video',
+      );
+      if (deleteInDB) {
+        await this.prisma.part.update({
+          where: { id },
+          data: { partAudio: null },
+        });
+      }
+      return result;
+    }
+    return { message: 'Không có audio' };
+  }
+
+  async remove(id: number) {
+    await this.deletePartAudio(id);
     return this.prisma.part.delete({ where: { id } });
   }
 }

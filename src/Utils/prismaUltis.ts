@@ -76,7 +76,7 @@ const prismaUltis = {
             title: part.title,
             type: part.type,
             totalPoints: part.totalPoints,
-            questions: part.questions.map((question) => {
+            questions: part.questions?.map((question) => {
               return {
                 create: {
                   title: question.title,

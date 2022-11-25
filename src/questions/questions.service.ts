@@ -126,7 +126,19 @@ export class QuestionsService {
     });
   }
 
-  remove(id: number) {
+  async remove(id: number) {
+    const question = await this.findOne(id);
+    let removeAudio = undefined,
+      removeImages = undefined;
+    if (question.questionAudio) {
+      removeAudio = this.deleteQuesitonAudio(id);
+    }
+    if (question.questionImages) {
+      removeImages = question.questionImages.map((url) => {
+        return this.deleteQuestionImage(id, url);
+      });
+    }
+    await Promise.all([removeAudio, ...removeImages]);
     return this.prisma.question.delete({ where: { id } });
   }
 }
