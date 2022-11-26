@@ -4,6 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import Ultis from 'src/Utils/Ultis';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
+import QuestionEntity from './entities/question.entity';
 
 @Injectable()
 export class QuestionsService {
@@ -126,8 +127,8 @@ export class QuestionsService {
     });
   }
 
-  async remove(id: number) {
-    const question = await this.findOne(id);
+  async remove(id: number, question?: QuestionEntity) {
+    question = question ? question : await this.findOne(id);
     let removeAudio = undefined,
       removeImages = undefined;
     if (question.questionAudio) {

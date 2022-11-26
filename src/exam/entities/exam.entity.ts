@@ -14,6 +14,7 @@ export class ExamEntity implements Exam {
   subjectName: string;
   grade: string;
   publishers: string;
+  documentUrl: string;
   createdAt: Date;
   updatedAt: Date;
   parts?: PartEntity[];

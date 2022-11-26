@@ -10,10 +10,12 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
+  UploadedFile,
+  UseInterceptors,
+  ValidationPipe,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiCreatedResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { AccessTokenGuard } from 'src/auth/accessToken.guard';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
 import { ExamEntity } from './entities/exam.entity';
@@ -26,8 +28,13 @@ export class ExamController {
 
   @Post()
   @ApiCreatedResponse({ type: ExamEntity })
-  create(@Body() createExamDto: CreateExamDto) {
-    return this.examService.create(createExamDto);
+  @UseInterceptors(FileInterceptor('documentFile'))
+  create(
+    @Body(new ValidationPipe({ transform: true }))
+    createExamDto: CreateExamDto,
+    @UploadedFile() documentFile: Express.Multer.File,
+  ) {
+    return this.examService.create(createExamDto, documentFile);
   }
 
   @Get()

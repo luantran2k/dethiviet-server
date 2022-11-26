@@ -1,16 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, Question } from '@prisma/client';
+import { Part, Prisma, Question } from '@prisma/client';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { QuestionsService } from 'src/questions/questions.service';
 import Ultis from 'src/Utils/Ultis';
 import { CreatePartDto } from './dto/create-part.dto';
 import { UpdatePartDto } from './dto/update-part.dto';
+import PartEntity from './entities/part.entity';
 
 @Injectable()
 export class PartsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cloudinary: CloudinaryService,
+    private readonly questionsService: QuestionsService,
   ) {}
   async create(createPartDto: CreatePartDto) {
     const { numberOfQuestions, ...part } = createPartDto;
@@ -84,7 +87,7 @@ export class PartsService {
         })
       : undefined;
     if (audioUpload.secure_url) {
-      await this.deletePartAudio(id, false);
+      await this.deletePartAudio(id, { deleteInDB: false });
       await this.prisma.part.update({
         where: { id },
         data: { partAudio: audioUpload.secure_url },
@@ -93,14 +96,17 @@ export class PartsService {
     }
   }
 
-  async deletePartAudio(id: number, deleteInDB: boolean = true) {
-    const question = await this.findOne(id);
-    if (question.partAudio) {
+  async deletePartAudio(
+    id: number = 10,
+    options: { deleteInDB?: boolean; part?: PartEntity } = { deleteInDB: true },
+  ) {
+    const part = options.part ? options.part : await this.findOne(id);
+    if (part.partAudio) {
       const result = await this.cloudinary.removeFile(
-        Ultis.getPublicId(question.partAudio),
+        Ultis.getPublicId(part.partAudio),
         'video',
       );
-      if (deleteInDB) {
+      if (options?.deleteInDB) {
         await this.prisma.part.update({
           where: { id },
           data: { partAudio: null },
@@ -111,8 +117,19 @@ export class PartsService {
     return { message: 'Không có audio' };
   }
 
-  async remove(id: number) {
-    await this.deletePartAudio(id);
+  async remove(id: number, part?: PartEntity) {
+    part = part ? part : await this.findOne(id);
+    if (part) {
+      const questionRemove = part.questions.map((question) =>
+        this.questionsService.remove(question.id, question),
+      );
+      const partAudioRemove = this.deletePartAudio(id, {
+        part: part,
+      });
+      await Promise.all([partAudioRemove, ...questionRemove]);
+    } else {
+      await this.deletePartAudio(id);
+    }
     return this.prisma.part.delete({ where: { id } });
   }
 }
