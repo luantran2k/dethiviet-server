@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
@@ -9,7 +10,9 @@ import { PartsService } from 'src/parts/parts.service';
 import prismaUltis from 'src/Utils/prismaUltis';
 import Ultis from 'src/Utils/Ultis';
 import { PrismaService } from './../prisma/prisma.service';
+import CompleteExamDto from './dto/completed-exam.dto';
 import { CreateExamDto } from './dto/create-exam.dto';
+import FavoriteExamDto from './dto/favorite-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
 import { ExamEntity } from './entities/exam.entity';
 
@@ -62,6 +65,7 @@ export class ExamService {
           select: {
             name: true,
             username: true,
+            profileImg: true,
           },
         },
       },
@@ -87,8 +91,15 @@ export class ExamService {
     });
   }
 
-  findOne(id: number, includePart?: boolean, includeOwner?: boolean) {
-    return this.prisma.exam.findUniqueOrThrow({
+  async findOne(
+    id: number,
+    {
+      userId,
+      includePart,
+      includeOwner,
+    }: { userId?: number; includePart?: boolean; includeOwner?: boolean },
+  ) {
+    const { UserFavoriteExam, ...result } = await this.prisma.exam.findFirst({
       where: { id },
       include: {
         owner: includeOwner && {
@@ -118,8 +129,17 @@ export class ExamService {
             },
           },
         },
+        UserFavoriteExam: userId && {
+          where: {
+            userId,
+          },
+        },
       },
     });
+    return {
+      ...result,
+      isFavorited: UserFavoriteExam[0]?.userId === userId ? true : false,
+    };
   }
 
   update(id: number, updateExamDto: UpdateExamDto) {
@@ -130,7 +150,7 @@ export class ExamService {
   }
 
   async remove(id: number) {
-    const exam = await this.findOne(id, true);
+    const exam = await this.findOne(id, { includePart: true });
     if (exam?.documentUrl) {
       await this.cloudinary.removeFile(
         Ultis.getPublicId(exam.documentUrl),
@@ -156,5 +176,36 @@ export class ExamService {
       return documentUpload;
     }
     return undefined;
+  }
+
+  async completedExam(examId: number, completeExamEto: CompleteExamDto) {
+    return this.prisma.userCompleteExam.create({
+      data: {
+        userId: completeExamEto.userId,
+        examId: examId,
+      },
+    });
+  }
+  async addFavoriteExam(examId: number, userId: number) {
+    try {
+      return this.prisma.userFavoriteExam.create({
+        data: {
+          examId,
+          userId,
+        },
+      });
+    } catch {
+      throw new ConflictException('Đã có trong danh sách yêu thích');
+    }
+  }
+  async deleteFavoriteExam(examId: number, userId: number) {
+    return this.prisma.userFavoriteExam.delete({
+      where: {
+        userId_examId: {
+          examId,
+          userId,
+        },
+      },
+    });
   }
 }

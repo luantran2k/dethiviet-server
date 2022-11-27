@@ -5,6 +5,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
 import { use } from 'passport';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { ExamEntity } from 'src/exam/entities/exam.entity';
 
 @Injectable()
 export class UsersService {
@@ -20,11 +21,21 @@ export class UsersService {
   }
 
   findAll() {
-    return this.prisma.user.findMany();
+    return this.prisma.user.findMany({
+      select: {
+        id: true,
+        username: true,
+        profileImg: true,
+        name: true,
+        email: true,
+      },
+    });
   }
 
   findOne(id: number) {
-    return this.prisma.user.findFirst({ where: { id } });
+    return this.prisma.user.findFirst({
+      where: { id },
+    });
   }
 
   findByUsername(username: string) {
@@ -49,5 +60,83 @@ export class UsersService {
     const numberOfFiles = fileInfo.total_count;
     const randomNumber = Math.floor(Math.random() * numberOfFiles);
     return fileInfo.resources[randomNumber].url;
+  }
+
+  getInfo(id: number) {
+    return this.prisma.user.findFirst({
+      where: { id },
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        profileImg: true,
+        email: true,
+      },
+    });
+  }
+
+  async getOwnExams(id: number) {
+    const exams = await this.prisma.exam.findMany({
+      where: {
+        ownerId: id,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: {
+        id: true,
+        title: true,
+        createdAt: true,
+        documentUrl: true,
+        grade: true,
+        examName: true,
+        subjectName: true,
+      },
+    });
+    return { exams };
+  }
+
+  async getCompletedExams(id: number) {
+    const exams = await this.prisma.userCompleteExam.findMany({
+      where: {
+        userId: id,
+      },
+      select: {
+        exam: {
+          select: {
+            id: true,
+            title: true,
+            createdAt: true,
+            documentUrl: true,
+            grade: true,
+            examName: true,
+            subjectName: true,
+          },
+        },
+      },
+    });
+    return { exams: exams.map((exam) => exam.exam) };
+  }
+
+  async getFavoriteExams(id: number) {
+    const exams = await this.prisma.userFavoriteExam.findMany({
+      where: {
+        userId: id,
+      },
+      select: {
+        exam: {
+          select: {
+            id: true,
+            title: true,
+            createdAt: true,
+            documentUrl: true,
+            grade: true,
+            examName: true,
+            subjectName: true,
+          },
+        },
+      },
+    });
+    return { exams: exams.map((exam) => exam.exam) };
   }
 }

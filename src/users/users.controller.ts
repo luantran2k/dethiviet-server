@@ -1,3 +1,4 @@
+import { ExamEntity } from './../exam/entities/exam.entity';
 import {
   Body,
   Controller,
@@ -36,7 +37,22 @@ export class UsersController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+    return this.usersService.getInfo(+id);
+  }
+
+  @Get(':id/exams/own')
+  getOwnExams(@Param('id') id: string) {
+    return this.usersService.getOwnExams(+id);
+  }
+
+  @Get(':id/exams/completed')
+  getCompletedExams(@Param('id') id: string) {
+    return this.usersService.getCompletedExams(+id);
+  }
+
+  @Get(':id/exams/favorite')
+  getFavoriteExams(@Param('id') id: string) {
+    return this.usersService.getFavoriteExams(+id);
   }
 
   @Patch(':id')

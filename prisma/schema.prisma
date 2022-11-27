@@ -11,34 +11,62 @@ datasource db {
 }
 
 model User {
-  id           Int     @id @default(autoincrement())
-  username     String  @unique
-  profileImg   String?
-  password     String
-  email        String? @unique
-  refreshToken String?
-  name         String?
-  exams        Exam[]
+  id               Int                @id @default(autoincrement())
+  username         String             @unique
+  profileImg       String?
+  password         String
+  email            String?            @unique
+  phone            String?            @unique
+  role             String[]
+  refreshToken     String?
+  name             String?
+  exams            Exam[]
+  UserFavoriteExam UserFavoriteExam[]
+  UsercompleteExam UserCompleteExam[]
+  createdAt        DateTime           @default(now())
 }
 
 model Exam {
-  id          Int       @id @default(autoincrement())
-  owner       User      @relation(fields: [ownerId], references: [id])
-  ownerId     Int
-  title       String
-  isPublic    Boolean   @default(true)
-  duration    Int?
-  type        String?
-  examName    String?
-  date        DateTime?
-  description String?
-  subjectName String?
-  grade       String?
-  publishers  String?
-  documentUrl String?
-  parts       Part[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime? @updatedAt
+  id               Int                @id @default(autoincrement())
+  owner            User               @relation(fields: [ownerId], references: [id])
+  ownerId          Int
+  title            String
+  isPublic         Boolean            @default(true)
+  duration         Int?
+  type             String?
+  examName         String?
+  date             DateTime?
+  description      String?
+  subjectName      String?
+  grade            String?
+  publishers       String?
+  documentUrl      String?
+  completedCount   Int?
+  parts            Part[]
+  UserFavoriteExam UserFavoriteExam[]
+  UsercompleteExam UserCompleteExam[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime?          @updatedAt
+}
+
+model UserFavoriteExam {
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  exam       Exam     @relation(fields: [examId], references: [id])
+  examId     Int
+  assignedAt DateTime @default(now())
+
+  @@id([userId, examId])
+}
+
+model UserCompleteExam {
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  exam       Exam     @relation(fields: [examId], references: [id])
+  examId     Int
+  completeAt DateTime @default(now())
+
+  @@id([userId, examId])
 }
 
 model Part {

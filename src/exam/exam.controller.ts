@@ -4,6 +4,7 @@ import {
   DefaultValuePipe,
   Delete,
   Get,
+  Optional,
   Param,
   ParseBoolPipe,
   ParseIntPipe,
@@ -16,7 +17,9 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiCreatedResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
+import CompleteExamDto from './dto/completed-exam.dto';
 import { CreateExamDto } from './dto/create-exam.dto';
+import FavoriteExamDto from './dto/favorite-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
 import { ExamEntity } from './entities/exam.entity';
 import { ExamService } from './exam.service';
@@ -63,12 +66,17 @@ export class ExamController {
   @ApiResponse({ type: ExamEntity })
   findOne(
     @Param('id') id: string,
+    @Query('userId') userId?: string,
     @Query('includePart', new DefaultValuePipe(false), ParseBoolPipe)
     includePart?: boolean,
     @Query('includeOwner', new DefaultValuePipe(false), ParseBoolPipe)
     includeOwner?: boolean,
   ) {
-    return this.examService.findOne(+id, includePart, includeOwner);
+    return this.examService.findOne(+id, {
+      userId: +userId,
+      includePart,
+      includeOwner,
+    });
   }
 
   @Patch(':id')
@@ -81,5 +89,29 @@ export class ExamController {
   @ApiResponse({ type: ExamEntity })
   remove(@Param('id') id: string) {
     return this.examService.remove(+id);
+  }
+
+  @Post(':id/completed')
+  completedExam(
+    @Param('id') id: string,
+    @Body() completeExamEto: CompleteExamDto,
+  ) {
+    return this.examService.completedExam(+id, completeExamEto);
+  }
+
+  @Post(':examId/favorite')
+  addToFavouriteExam(
+    @Param('examId') examId: string,
+    @Query('userId') userId: string,
+  ) {
+    return this.examService.addFavoriteExam(+examId, +userId);
+  }
+
+  @Delete(':examId/favorite')
+  delteFavouriteExam(
+    @Param('examId') examId: string,
+    @Query('userId') userId: string,
+  ) {
+    return this.examService.deleteFavoriteExam(+examId, +userId);
   }
 }
