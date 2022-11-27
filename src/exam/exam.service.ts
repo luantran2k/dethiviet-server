@@ -151,7 +151,7 @@ export class ExamService {
   async uploadDocumentFile(documentFile: Express.Multer.File) {
     if (documentFile) {
       const documentUpload = await this.cloudinary.uploadFile(documentFile, {
-        folder: 'exam/documents',
+        folderName: 'exam/documents',
       });
       return documentUpload;
     }
