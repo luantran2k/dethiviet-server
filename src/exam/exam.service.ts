@@ -61,6 +61,7 @@ export class ExamService {
         date: true,
         subjectName: true,
         grade: true,
+        createdAt: true,
         owner: {
           select: {
             name: true,
@@ -73,6 +74,7 @@ export class ExamService {
         createdAt: 'desc',
       },
       where: {
+        isPublic: true,
         title: {
           contains: title,
           mode: 'insensitive',
@@ -207,5 +209,77 @@ export class ExamService {
         },
       },
     });
+  }
+  async getExamsIndexPage() {
+    const quantity = 10;
+
+    const selectUser = {
+      name: true,
+      username: true,
+      profileImg: true,
+    };
+    const selectExam = {
+      id: true,
+      ownerId: true,
+      title: true,
+      date: true,
+      subjectName: true,
+      grade: true,
+      createdAt: true,
+      owner: {
+        select: selectUser,
+      },
+    };
+    const lastestExamsPromise = this.prisma.exam.findMany({
+      take: quantity,
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: selectExam,
+    });
+
+    const examsWithCount = await this.prisma.userCompleteExam.groupBy({
+      by: ['examId'],
+      where: {
+        completeAt: {
+          gte: Ultis.getThisFirstDateOfMonth(),
+          lte: Ultis.getThisLastDateOfMonth(),
+        },
+      },
+      _count: {
+        completeAt: true,
+      },
+      orderBy: {
+        _count: {
+          completeAt: 'desc',
+        },
+      },
+    });
+
+    const popularMonthExamsPromise = examsWithCount.map(async (exam) => {
+      return {
+        exam: await this.prisma.exam.findFirst({
+          where: { id: exam.examId },
+          include: {
+            owner: {
+              select: selectUser,
+            },
+          },
+        }),
+        completeCount: exam._count,
+      };
+    });
+
+    const [lastestExams, popularMonthExams] = await Promise.all([
+      lastestExamsPromise,
+      Promise.all(popularMonthExamsPromise),
+    ]);
+    return {
+      lastestExams,
+      popularMonthExams: popularMonthExams.map((exam) => ({
+        ...exam.exam,
+        completedCount: exam.completeCount.completeAt,
+      })),
+    };
   }
 }

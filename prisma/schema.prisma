@@ -41,7 +41,6 @@ model Exam {
   grade            String?
   publishers       String?
   documentUrl      String?
-  completedCount   Int?
   parts            Part[]
   UserFavoriteExam UserFavoriteExam[]
   UsercompleteExam UserCompleteExam[]

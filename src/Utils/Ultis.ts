@@ -6,5 +6,13 @@ const Ultis = {
     if (indexDot !== -1) return filePath.slice(0, indexDot); //Public id
     return filePath;
   },
+  getThisFirstDateOfMonth: () => {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  },
+  getThisLastDateOfMonth: () => {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  },
 };
 export default Ultis;

@@ -61,6 +61,12 @@ export class ExamController {
     );
   }
 
+  @Get('/index')
+  @ApiResponse({ type: ExamEntity, isArray: true })
+  getExamsIndexPage() {
+    return this.examService.getExamsIndexPage();
+  }
+
   //@UseGuards(AccessTokenGuard)
   @Get(':id')
   @ApiResponse({ type: ExamEntity })
