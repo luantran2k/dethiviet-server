@@ -2,19 +2,20 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  InternalServerErrorException,
 } from '@nestjs/common';
-import { Exam, Prisma } from '@prisma/client';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { PartsService } from 'src/parts/parts.service';
-import prismaUltis from 'src/Utils/prismaUltis';
 import Ultis from 'src/Utils/Ultis';
 import { PrismaService } from './../prisma/prisma.service';
 import CompleteExamDto from './dto/completed-exam.dto';
 import { CreateExamDto } from './dto/create-exam.dto';
-import FavoriteExamDto from './dto/favorite-exam.dto';
+import ExamToCreateInfoDto from './dto/exam-to-create-info.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
-import { ExamEntity } from './entities/exam.entity';
+
+export interface QuestionInfos {
+  questions: { id: number }[];
+  type: string;
+}
 
 @Injectable()
 export class ExamService {
@@ -280,6 +281,38 @@ export class ExamService {
         ...exam.exam,
         completedCount: exam.completeCount.completeAt,
       })),
+    };
+  }
+
+  async getExamToCreateInfo(examToCreateInfoDto: ExamToCreateInfoDto) {
+    const examIds = examToCreateInfoDto.examIds;
+    const parts = await this.prisma.part.findMany({
+      where: {
+        examId: { in: examIds },
+      },
+      select: {
+        type: true,
+        questions: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+    const questionInfos = parts.reduce((preValue, curValue) => {
+      const questionInfoFind = preValue.find(
+        (questionInfo) => questionInfo.type === curValue.type,
+      );
+      if (questionInfoFind) {
+        questionInfoFind.questions = questionInfoFind.questions.concat(
+          curValue.questions,
+        );
+        return preValue;
+      }
+      return [...preValue, curValue];
+    }, [] as QuestionInfos[]);
+    return {
+      questionInfos,
     };
   }
 }

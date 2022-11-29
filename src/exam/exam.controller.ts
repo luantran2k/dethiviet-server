@@ -4,7 +4,6 @@ import {
   DefaultValuePipe,
   Delete,
   Get,
-  Optional,
   Param,
   ParseBoolPipe,
   ParseIntPipe,
@@ -19,7 +18,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiCreatedResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
 import CompleteExamDto from './dto/completed-exam.dto';
 import { CreateExamDto } from './dto/create-exam.dto';
-import FavoriteExamDto from './dto/favorite-exam.dto';
+import ExamToCreateInfoDto from './dto/exam-to-create-info.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
 import { ExamEntity } from './entities/exam.entity';
 import { ExamService } from './exam.service';
@@ -65,6 +64,11 @@ export class ExamController {
   @ApiResponse({ type: ExamEntity, isArray: true })
   getExamsIndexPage() {
     return this.examService.getExamsIndexPage();
+  }
+
+  @Post('exam-to-create-info')
+  getExamToCreateInfo(@Body() examToCreateInfoDto: ExamToCreateInfoDto) {
+    return this.examService.getExamToCreateInfo(examToCreateInfoDto);
   }
 
   //@UseGuards(AccessTokenGuard)
