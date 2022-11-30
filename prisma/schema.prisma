@@ -41,6 +41,8 @@ model Exam {
   grade            String?
   publishers       String?
   documentUrl      String?
+  isOriginal       Boolean            @default(true)
+  securityCode     String?
   parts            Part[]
   UserFavoriteExam UserFavoriteExam[]
   UsercompleteExam UserCompleteExam[]
@@ -78,6 +80,7 @@ model Part {
   partAudio       String?
   description     String?
   numberOfAnswers Int?
+  questionIds     Int[]
   questions       Question[]
 }
 

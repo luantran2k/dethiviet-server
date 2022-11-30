@@ -15,8 +15,9 @@ export class ExamEntity implements Exam {
   grade: string;
   publishers: string;
   documentUrl: string;
-  completedCount: number;
   createdAt: Date;
   updatedAt: Date;
+  securityCode: string;
+  isOriginal: boolean;
   parts?: PartEntity[];
 }

@@ -10,13 +10,19 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
   ValidationPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiCreatedResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { AccessTokenGuard } from 'src/auth/accessToken.guard';
+import { JwtPayload } from 'src/auth/accessToken.strategy';
 import CompleteExamDto from './dto/completed-exam.dto';
+import ExamsAutoCreatedDto from './dto/create-exam-auto.dto';
+import ExamAutoCreatedDto from './dto/create-exam-auto.dto';
 import { CreateExamDto } from './dto/create-exam.dto';
 import ExamToCreateInfoDto from './dto/exam-to-create-info.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
@@ -69,6 +75,13 @@ export class ExamController {
   @Post('exam-to-create-info')
   getExamToCreateInfo(@Body() examToCreateInfoDto: ExamToCreateInfoDto) {
     return this.examService.getExamToCreateInfo(examToCreateInfoDto);
+  }
+
+  @UseGuards(AccessTokenGuard)
+  @Post('/create-auto')
+  createExamAuto(@Body() examsAutoCreatedDto: ExamsAutoCreatedDto, @Req() req) {
+    const user: JwtPayload = req.user;
+    return this.examService.createExamAuto(+user.sub, examsAutoCreatedDto);
   }
 
   //@UseGuards(AccessTokenGuard)

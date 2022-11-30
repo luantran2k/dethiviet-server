@@ -117,12 +117,14 @@ export class PartsService {
     return { message: 'Không có audio' };
   }
 
-  async remove(id: number, part?: PartEntity) {
+  async remove(id: number, part?: PartEntity, isExamOrignal?: boolean) {
     part = part ? part : await this.findOne(id);
     if (part) {
-      const questionRemove = part.questions.map((question) =>
-        this.questionsService.remove(question.id, question),
-      );
+      const questionRemove = part.questions.map((question) => {
+        if (isExamOrignal) {
+          this.questionsService.remove(question.id, question);
+        }
+      });
       const partAudioRemove = this.deletePartAudio(id, {
         part: part,
       });

@@ -8,6 +8,7 @@ import { PartsService } from 'src/parts/parts.service';
 import Ultis from 'src/Utils/Ultis';
 import { PrismaService } from './../prisma/prisma.service';
 import CompleteExamDto from './dto/completed-exam.dto';
+import ExamsAutoCreatedDto from './dto/create-exam-auto.dto';
 import { CreateExamDto } from './dto/create-exam.dto';
 import ExamToCreateInfoDto from './dto/exam-to-create-info.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
@@ -139,6 +140,36 @@ export class ExamService {
         },
       },
     });
+
+    if (!result.isOriginal && includePart) {
+      const partWithQuestionPromise = result.parts.map(async (part) => {
+        // questions: await this.prisma.question.findMany({
+        //   where: {
+        //     id: { in: part.questionIds },
+        //   },
+        //   include: {
+        //     answers: true,
+        //   },
+        // }),
+        const questions = await Promise.all(
+          part.questionIds.map(async (id) => {
+            return await this.prisma.question.findFirst({
+              where: { id },
+              include: {
+                answers: true,
+              },
+            });
+          }),
+        );
+        return {
+          ...part,
+          questions,
+        };
+      });
+      const partWithQuestion = await Promise.all(partWithQuestionPromise);
+      result.parts = partWithQuestion;
+    }
+
     return {
       ...result,
       isFavorited: UserFavoriteExam[0]?.userId === userId ? true : false,
@@ -154,6 +185,7 @@ export class ExamService {
 
   async remove(id: number) {
     const exam = await this.findOne(id, { includePart: true });
+
     if (exam?.documentUrl) {
       await this.cloudinary.removeFile(
         Ultis.getPublicId(exam.documentUrl),
@@ -162,7 +194,7 @@ export class ExamService {
     }
     if (exam?.parts) {
       const partRemove = exam.parts.map((part) => {
-        return this.partsService.remove(part.id, part);
+        return this.partsService.remove(part.id, part, exam.isOriginal);
       });
       await Promise.all(partRemove);
     }
@@ -312,7 +344,40 @@ export class ExamService {
       return [...preValue, curValue];
     }, [] as QuestionInfos[]);
     return {
-      questionInfos,
+      questionInfos: questionInfos.map((questionInfo) => ({
+        type: questionInfo.type,
+        questions: questionInfo.questions.map((question) => question.id),
+      })),
     };
+  }
+  async createExamAuto(
+    ownerId: number,
+    examsAutoCreatedDto: ExamsAutoCreatedDto,
+  ) {
+    const examsCreatedPromise = examsAutoCreatedDto.exams.map(async (exam) => {
+      const { parts, ...newExam } = exam;
+      const examCreated = await this.prisma.exam.create({
+        data: {
+          ownerId,
+          isOriginal: false,
+          ...newExam,
+        },
+      });
+
+      const partsCreatedPromise = parts.map(async (part) => {
+        return await this.prisma.part.create({
+          data: {
+            ...part,
+            examId: examCreated.id,
+          },
+        });
+      });
+
+      const partsCreated = await Promise.all(partsCreatedPromise);
+
+      return { ...examCreated, parts: partsCreated };
+    });
+    const exams = await Promise.all(examsCreatedPromise);
+    return { exams };
   }
 }

@@ -10,5 +10,6 @@ export default class PartEntity implements Part {
   partAudio: string;
   description: string;
   numberOfAnswers: number;
+  questionIds: number[];
   questions?: QuestionEntity[];
 }
