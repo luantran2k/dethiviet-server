@@ -94,11 +94,14 @@ export class ExamController {
     includePart?: boolean,
     @Query('includeOwner', new DefaultValuePipe(false), ParseBoolPipe)
     includeOwner?: boolean,
+    @Query('withRelatedExams', new DefaultValuePipe(false), ParseBoolPipe)
+    withRelatedExams?: boolean,
   ) {
     return this.examService.findOne(+id, {
       userId: +userId,
       includePart,
       includeOwner,
+      withRelatedExams,
     });
   }
 

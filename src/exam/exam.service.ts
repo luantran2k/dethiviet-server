@@ -66,6 +66,7 @@ export class ExamService {
         createdAt: true,
         owner: {
           select: {
+            id: true,
             name: true,
             username: true,
             profileImg: true,
@@ -101,7 +102,13 @@ export class ExamService {
       userId,
       includePart,
       includeOwner,
-    }: { userId?: number; includePart?: boolean; includeOwner?: boolean },
+      withRelatedExams,
+    }: {
+      userId?: number;
+      includePart?: boolean;
+      includeOwner?: boolean;
+      withRelatedExams?: boolean;
+    },
   ) {
     const { UserFavoriteExam, ...result } = await this.prisma.exam.findFirst({
       where: { id },
@@ -141,6 +148,42 @@ export class ExamService {
       },
     });
 
+    let relatedExams = undefined;
+
+    if (withRelatedExams) {
+      relatedExams = await this.prisma.exam.findMany({
+        take: 10,
+        select: {
+          id: true,
+          title: true,
+          subjectName: true,
+          grade: true,
+          createdAt: true,
+          duration: true,
+          owner: {
+            select: {
+              username: true,
+              name: true,
+              profileImg: true,
+            },
+          },
+        },
+        where: {
+          id: {
+            not: result.id,
+          },
+          isPublic: true,
+          isOriginal: true,
+          subjectName: {
+            contains: result.subjectName,
+          },
+          grade: {
+            equals: result.grade,
+          },
+        },
+      });
+    }
+
     if (!result.isOriginal && includePart) {
       const partWithQuestionPromise = result.parts.map(async (part) => {
         // questions: await this.prisma.question.findMany({
@@ -173,6 +216,7 @@ export class ExamService {
     return {
       ...result,
       isFavorited: UserFavoriteExam[0]?.userId === userId ? true : false,
+      relatedExams: withRelatedExams ? relatedExams : undefined,
     };
   }
 
@@ -247,6 +291,7 @@ export class ExamService {
     const quantity = 10;
 
     const selectUser = {
+      id: true,
       name: true,
       username: true,
       profileImg: true,
