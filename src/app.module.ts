@@ -10,6 +10,8 @@ import { UsersModule } from './users/users.module';
 import { AnswersModule } from './answers/answers.module';
 import { QuestionsModule } from './questions/questions.module';
 import { PartsModule } from './parts/parts.module';
+import { QuestioningsModule } from './questionings/questionings.module';
+import { ExplainingsModule } from './explainings/explainings.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { PartsModule } from './parts/parts.module';
     AnswersModule,
     QuestionsModule,
     PartsModule,
+    QuestioningsModule,
+    ExplainingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
