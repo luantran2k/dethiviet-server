@@ -6,3 +6,7 @@ export default class AnswerEntity implements Answer {
   value: string;
   isTrue: boolean;
 }
+
+export class AnswerEntityWithCheck extends AnswerEntity {
+  isAnswerFail?: boolean;
+}

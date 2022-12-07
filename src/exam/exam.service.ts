@@ -5,7 +5,9 @@ import {
 } from '@nestjs/common';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { PartsService } from 'src/parts/parts.service';
+import QuestionEntity from 'src/questions/entities/question.entity';
 import Ultis from 'src/Utils/Ultis';
+import { AnswerEntityWithCheck } from './../answers/entities/answer.entity';
 import { PrismaService } from './../prisma/prisma.service';
 import CompleteExamDto from './dto/completed-exam.dto';
 import ExamsAutoCreatedDto from './dto/create-exam-auto.dto';
@@ -16,6 +18,10 @@ import { UpdateExamDto } from './dto/update-exam.dto';
 export interface QuestionInfos {
   questions: { id: number }[];
   type: string;
+}
+
+export interface QuestionResult extends Partial<QuestionEntity> {
+  isQuestionTrue: boolean;
 }
 
 @Injectable()
@@ -103,11 +109,13 @@ export class ExamService {
       includePart,
       includeOwner,
       withRelatedExams,
+      withAnswer,
     }: {
       userId?: number;
       includePart?: boolean;
       includeOwner?: boolean;
       withRelatedExams?: boolean;
+      withAnswer?: boolean;
     },
   ) {
     const { UserFavoriteExam, ...result } = await this.prisma.exam.findFirst({
@@ -134,6 +142,11 @@ export class ExamService {
                 answers: {
                   orderBy: {
                     id: 'asc',
+                  },
+                  select: {
+                    id: true,
+                    value: true,
+                    isTrue: withAnswer,
                   },
                 },
               },
@@ -257,11 +270,115 @@ export class ExamService {
     return undefined;
   }
 
-  async completedExam(examId: number, completeExamEto: CompleteExamDto) {
+  async completedExam(userId: number, completeExamDto: CompleteExamDto) {
+    const resultExam = await this.prisma.exam.findFirst({
+      where: { id: completeExamDto.id },
+      select: {
+        id: true,
+        title: true,
+        subjectName: true,
+        createdAt: true,
+        isOriginal: true,
+        parts: {
+          orderBy: {
+            id: 'asc',
+          },
+          include: {
+            questions: {
+              orderBy: {
+                id: 'asc',
+              },
+              include: {
+                answers: {
+                  orderBy: {
+                    id: 'asc',
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const partsChecked = completeExamDto.parts.reduce(
+      (output, part, partIndex) => {
+        const pointPerQuestion = part.totalPoints / part.questions.length;
+        const questionsResult: QuestionResult[] = part.questions.reduce(
+          (output, question, questionIndex) => {
+            const resultQuestion =
+              resultExam.parts[partIndex].questions[questionIndex];
+            const answers: AnswerEntityWithCheck[] = question.answers.map(
+              (answer, answerIndex) => {
+                const resultAnswer = resultQuestion.answers[answerIndex];
+                if (resultAnswer.isTrue == Boolean(answer.isTrue)) {
+                  return {
+                    ...answer,
+                    isAnswerFail: false,
+                  };
+                } else {
+                  return {
+                    ...answer,
+                    isAnswerFail: true,
+                  };
+                }
+              },
+            );
+            const isQuestionTrue = !answers.some(
+              (answer) => answer.isAnswerFail == true,
+            );
+            return [
+              ...output,
+              {
+                ...resultQuestion,
+                isQuestionTrue,
+                answers,
+              },
+            ];
+          },
+          [],
+        );
+        const numberCorrectQuestionsOfPart = questionsResult.filter(
+          (questionResult) => questionResult.isQuestionTrue == true,
+        ).length;
+        const partScore: number =
+          numberCorrectQuestionsOfPart * pointPerQuestion;
+
+        return {
+          score: output.score + partScore,
+          totalQuestions: output.totalQuestions + part.questions.length,
+          numberCorrectQuestions:
+            output.numberCorrectQuestions + numberCorrectQuestionsOfPart,
+          partsResult: [
+            ...output.partsResult,
+            {
+              ...part,
+              partScore,
+              numberCorrectQuestionsOfPart,
+              questions: questionsResult,
+            },
+          ],
+        };
+      },
+      {
+        score: 0,
+        totalQuestions: 0,
+        numberCorrectQuestions: 0,
+        partsResult: [],
+      },
+    );
     return this.prisma.userCompleteExam.create({
       data: {
-        userId: completeExamEto.userId,
-        examId: examId,
+        userId,
+        examId: completeExamDto.id,
+        score: partsChecked.score,
+        examCompleted: JSON.stringify({
+          ...resultExam,
+          score: partsChecked.score,
+          parts: partsChecked.partsResult,
+          numberCorrectQuestions: partsChecked.numberCorrectQuestions,
+          totalQuestions: partsChecked.totalQuestions,
+        }),
       },
     });
   }
@@ -424,5 +541,9 @@ export class ExamService {
     });
     const exams = await Promise.all(examsCreatedPromise);
     return { exams };
+  }
+
+  getResult(resultId: number) {
+    return this.prisma.userCompleteExam.findFirst({ where: { id: resultId } });
   }
 }

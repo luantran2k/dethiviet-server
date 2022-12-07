@@ -102,6 +102,7 @@ export class UsersService {
         userId: id,
       },
       select: {
+        id: true,
         exam: {
           select: {
             id: true,
@@ -115,7 +116,9 @@ export class UsersService {
         },
       },
     });
-    return { exams: exams.map((exam) => exam.exam) };
+    return {
+      exams: exams.map((exam) => ({ ...exam.exam, resultId: exam.id })),
+    };
   }
 
   async getFavoriteExams(id: number) {

@@ -84,6 +84,19 @@ export class ExamController {
     return this.examService.createExamAuto(+user.sub, examsAutoCreatedDto);
   }
 
+  @Post('completed')
+  @UseGuards(AccessTokenGuard)
+  completedExam(@Body() completeExamEto: CompleteExamDto, @Req() req) {
+    const user: JwtPayload = req.user;
+    return this.examService.completedExam(+user.sub, completeExamEto);
+  }
+
+  @Get('result/:resultId')
+  @UseGuards(AccessTokenGuard)
+  getResult(@Param('resultId') resultId: string, @Req() req) {
+    const user: JwtPayload = req.user;
+    return this.examService.getResult(+resultId);
+  }
   //@UseGuards(AccessTokenGuard)
   @Get(':id')
   @ApiResponse({ type: ExamEntity })
@@ -96,12 +109,15 @@ export class ExamController {
     includeOwner?: boolean,
     @Query('withRelatedExams', new DefaultValuePipe(false), ParseBoolPipe)
     withRelatedExams?: boolean,
+    @Query('withAnswer', new DefaultValuePipe(true), ParseBoolPipe)
+    withAnswer?: boolean,
   ) {
     return this.examService.findOne(+id, {
       userId: +userId,
       includePart,
       includeOwner,
       withRelatedExams,
+      withAnswer,
     });
   }
 
@@ -115,14 +131,6 @@ export class ExamController {
   @ApiResponse({ type: ExamEntity })
   remove(@Param('id') id: string) {
     return this.examService.remove(+id);
-  }
-
-  @Post(':id/completed')
-  completedExam(
-    @Param('id') id: string,
-    @Body() completeExamEto: CompleteExamDto,
-  ) {
-    return this.examService.completedExam(+id, completeExamEto);
   }
 
   @Post(':examId/favorite')
