@@ -41,6 +41,13 @@ export class ReportsController {
     return this.reportsService.findAll();
   }
 
+  @Get('findByUser')
+  @UseGuards(AccessTokenGuard)
+  findByUser(@Req() req) {
+    const user: JwtPayload = req.user;
+    return this.reportsService.findByUser(+user.sub);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.reportsService.findOne(+id);
@@ -52,7 +59,9 @@ export class ReportsController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.reportsService.remove(+id);
+  @UseGuards(AccessTokenGuard)
+  remove(@Param('id') id: string, @Req() req) {
+    const user: JwtPayload = req.user;
+    return this.reportsService.remove(+id, +user.sub);
   }
 }
