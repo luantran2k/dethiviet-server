@@ -1,13 +1,52 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { UploadApiResponse, UploadApiErrorResponse } from 'cloudinary';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import Ultis from 'src/Utils/Ultis';
 import { CreateQuestioningDto } from './dto/create-questioning.dto';
 import { UpdateQuestioningDto } from './dto/update-questioning.dto';
 
 @Injectable()
 export class QuestioningsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cloudinary: CloudinaryService,
+  ) {}
 
-  async create(userId: number, createQuestioningDto: CreateQuestioningDto) {
+  async create(
+    userId: number,
+    createQuestioningDto: CreateQuestioningDto,
+    files: {
+      audioFile?: Express.Multer.File[];
+      imageFiles?: Express.Multer.File[];
+    },
+  ) {
+    const promiseArray = [];
+    if (files.audioFile && files.audioFile.length > 0) {
+      const audioFilePromise = this.cloudinary.uploadFile(files.audioFile[0], {
+        folderName: 'post/audios',
+      });
+      promiseArray.push(audioFilePromise);
+    } else {
+      promiseArray.push(undefined);
+    }
+    if (files.imageFiles && files.imageFiles.length > 0) {
+      const imageFilesPromise = this.cloudinary.uploadFiles(files.imageFiles, {
+        folderName: 'post/images',
+      });
+      promiseArray.push(...imageFilesPromise);
+    }
+
+    const [audioRes, ...imagesRes] = await Promise.all(promiseArray);
+
+    if (audioRes?.secure_url) {
+      createQuestioningDto.questioningAudio = audioRes.secure_url;
+    }
+    if (imagesRes.some((image) => image?.secure_url)) {
+      createQuestioningDto.questioningImage = imagesRes.map(
+        (image) => image.secure_url,
+      );
+    }
     return await this.prisma.questioning.create({
       data: {
         ...createQuestioningDto,
@@ -74,6 +113,22 @@ export class QuestioningsService {
       throw new UnauthorizedException(
         `userId: ${userId}, ownerId: ${questioning.ownerId}`,
       );
+    }
+    const url: string[] = [];
+    if (questioning.questioningAudio) {
+      url.push(questioning.questioningAudio);
+    }
+    if (questioning.questioningImage.length > 0) {
+      url.push(...questioning.questioningImage);
+    }
+    if (url.length > 0) {
+      const promiseArray = url.map((url) => {
+        this.cloudinary.removeFile(
+          Ultis.getPublicId(url),
+          url.includes('post/images') ? 'image' : 'video',
+        );
+      });
+      await Promise.all(promiseArray);
     }
     return this.prisma.questioning.delete({ where: { id } });
   }
