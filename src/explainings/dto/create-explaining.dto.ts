@@ -1,1 +1,4 @@
-export class CreateExplainingDto {}
+export class CreateExplainingDto {
+  content: string;
+  questioningId: number;
+}

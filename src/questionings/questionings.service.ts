@@ -69,28 +69,123 @@ export class QuestioningsService {
     const questioning = await this.prisma.questioning.findFirst({
       where: { id: id },
     });
+
     if (userId !== questioning.ownerId) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException(
+        `userId: ${userId}, ownerId: ${questioning.ownerId}`,
+      );
     }
     return this.prisma.questioning.delete({ where: { id } });
   }
 
-  upVote(id: number) {
+  removeUpVoteInDB(id: number, userId: number, upVote: number[]) {
     return this.prisma.questioning.update({
       where: { id },
       data: {
-        vote: { increment: 1 },
+        upVote: {
+          set: upVote.filter((id) => id !== userId),
+        },
       },
-      select: { vote: true },
+      select: {
+        upVote: true,
+        downVote: true,
+      },
     });
   }
-  downVote(id: number) {
+  removeDownVoteInDB(id: number, userId: number, downVote: number[]) {
     return this.prisma.questioning.update({
       where: { id },
       data: {
-        vote: { decrement: 1 },
+        downVote: {
+          set: downVote.filter((id) => id !== userId),
+        },
       },
-      select: { vote: true },
+      select: {
+        upVote: true,
+        downVote: true,
+      },
     });
+  }
+
+  async upVote(id: number, userId: number) {
+    const questioning = await this.prisma.questioning.findFirst({
+      where: { id },
+      select: {
+        upVote: true,
+        downVote: true,
+      },
+    });
+    let upVotePromise = undefined;
+    let downVotePromise = undefined;
+    if (!questioning.upVote.some((id) => id === userId)) {
+      upVotePromise = this.prisma.questioning.update({
+        where: { id },
+        data: {
+          upVote: {
+            push: userId,
+          },
+        },
+      });
+    }
+    if (questioning.downVote.some((id) => id === userId)) {
+      downVotePromise = this.removeDownVoteInDB(
+        id,
+        userId,
+        questioning.downVote,
+      );
+    }
+    await Promise.all([upVotePromise, downVotePromise]);
+    return this.prisma.questioning.findFirst({
+      where: { id },
+      select: {
+        upVote: true,
+        downVote: true,
+      },
+    });
+  }
+  async downVote(id: number, userId: number) {
+    const questioning = await this.prisma.questioning.findFirst({
+      where: { id },
+      select: {
+        upVote: true,
+        downVote: true,
+      },
+    });
+    let upVotePromise = undefined;
+    let downVotePromise = undefined;
+    if (!questioning.downVote.some((id) => id === userId)) {
+      downVotePromise = this.prisma.questioning.update({
+        where: { id },
+        data: {
+          downVote: {
+            push: userId,
+          },
+        },
+      });
+    }
+    if (questioning.upVote.some((id) => id === userId)) {
+      upVotePromise = this.removeUpVoteInDB(id, userId, questioning.upVote);
+    }
+    await Promise.all([upVotePromise, downVotePromise]);
+    return this.prisma.questioning.findFirst({
+      where: { id },
+      select: {
+        upVote: true,
+        downVote: true,
+      },
+    });
+  }
+
+  async removeUpVote(id: number, userId: number) {
+    const questioning = await this.prisma.questioning.findFirst({
+      where: { id },
+    });
+    return this.removeUpVoteInDB(id, userId, questioning.upVote);
+  }
+  async removeDownVote(id: number, userId: number) {
+    const questioning = await this.prisma.questioning.findFirst({
+      where: { id },
+    });
+    return this.removeDownVoteInDB(id, userId, questioning.downVote);
   }
 }

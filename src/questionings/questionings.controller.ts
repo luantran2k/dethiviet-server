@@ -53,12 +53,27 @@ export class QuestioningsController {
 
   @Patch(':id/upVote')
   @UseGuards(AccessTokenGuard)
-  upVote(@Param('id') id: string) {
-    return this.questioningsService.upVote(+id);
+  upVote(@Param('id') id: string, @Req() req) {
+    const user: JwtPayload = req.user;
+    return this.questioningsService.upVote(+id, +user.sub);
   }
   @Patch(':id/downVote')
   @UseGuards(AccessTokenGuard)
-  downVote(@Param('id') id: string) {
-    return this.questioningsService.downVote(+id);
+  downVote(@Param('id') id: string, @Req() req) {
+    const user: JwtPayload = req.user;
+    return this.questioningsService.downVote(+id, +user.sub);
+  }
+
+  @Patch(':id/removeUpVote')
+  @UseGuards(AccessTokenGuard)
+  removeUpVote(@Param('id') id: string, @Req() req) {
+    const user: JwtPayload = req.user;
+    return this.questioningsService.removeUpVote(+id, +user.sub);
+  }
+  @Patch(':id/removeDownVote')
+  @UseGuards(AccessTokenGuard)
+  removeDownVote(@Param('id') id: string, @Req() req) {
+    const user: JwtPayload = req.user;
+    return this.questioningsService.removeDownVote(+id, +user.sub);
   }
 }

@@ -117,7 +117,8 @@ model Questioning {
   questioningAudio String?
   questioningImage String[]
   tags             String[]
-  vote             Int          @default(0)
+  upVote           Int[]
+  downVote         Int[]
   createdAt        DateTime     @default(now())
   updatedAt        DateTime?    @updatedAt
   explainings      Explaining[]
@@ -125,12 +126,13 @@ model Questioning {
 
 model Explaining {
   id            Int         @id @default(autoincrement())
-  questioning   Questioning @relation(fields: [questioningId], references: [id])
+  questioning   Questioning @relation(fields: [questioningId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   questioningId Int
   owner         User        @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   ownerId       Int
   content       String
-  vote          Int         @default(0)
+  upVote        Int[]
+  downVote      Int[]
   createdAt     DateTime    @default(now())
   updatedAt     DateTime?   @updatedAt
 }
