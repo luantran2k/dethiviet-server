@@ -45,7 +45,20 @@ export class QuestioningsController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.questioningsService.remove(+id);
+  @UseGuards(AccessTokenGuard)
+  remove(@Param('id') id: string, @Req() req) {
+    const user: JwtPayload = req.user;
+    return this.questioningsService.remove(+id, +user.sub);
+  }
+
+  @Patch(':id/upVote')
+  @UseGuards(AccessTokenGuard)
+  upVote(@Param('id') id: string) {
+    return this.questioningsService.upVote(+id);
+  }
+  @Patch(':id/downVote')
+  @UseGuards(AccessTokenGuard)
+  downVote(@Param('id') id: string) {
+    return this.questioningsService.downVote(+id);
   }
 }

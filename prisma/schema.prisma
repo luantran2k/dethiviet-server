@@ -111,7 +111,7 @@ model Answer {
 
 model Questioning {
   id               Int          @id @default(autoincrement())
-  user             User         @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  owner            User         @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   ownerId          Int
   content          String
   questioningAudio String?
@@ -120,14 +120,14 @@ model Questioning {
   vote             Int          @default(0)
   createdAt        DateTime     @default(now())
   updatedAt        DateTime?    @updatedAt
-  Explaining       Explaining[]
+  explainings      Explaining[]
 }
 
 model Explaining {
   id            Int         @id @default(autoincrement())
   questioning   Questioning @relation(fields: [questioningId], references: [id])
   questioningId Int
-  user          User        @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  owner         User        @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   ownerId       Int
   content       String
   vote          Int         @default(0)
