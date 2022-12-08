@@ -1,5 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { UploadApiResponse, UploadApiErrorResponse } from 'cloudinary';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import Ultis from 'src/Utils/Ultis';
@@ -22,7 +21,7 @@ export class QuestioningsService {
     },
   ) {
     const promiseArray = [];
-    if (files.audioFile && files.audioFile.length > 0) {
+    if (files?.audioFile && files?.audioFile?.length > 0) {
       const audioFilePromise = this.cloudinary.uploadFile(files.audioFile[0], {
         folderName: 'post/audios',
       });
@@ -30,7 +29,7 @@ export class QuestioningsService {
     } else {
       promiseArray.push(undefined);
     }
-    if (files.imageFiles && files.imageFiles.length > 0) {
+    if (files?.imageFiles && files?.imageFiles.length > 0) {
       const imageFilesPromise = this.cloudinary.uploadFiles(files.imageFiles, {
         folderName: 'post/images',
       });
@@ -65,9 +64,44 @@ export class QuestioningsService {
     });
   }
 
-  findAll() {
-    return this.prisma.questioning.findMany({
-      take: 10,
+  async findAll({
+    page,
+    search,
+    tag,
+  }: {
+    page: number;
+    search?: string;
+    tag?: string;
+  }) {
+    const quantity = 10;
+    const totalsPromise =
+      page === 0
+        ? this.prisma.questioning.count({
+            orderBy: {
+              createdAt: 'desc',
+            },
+          })
+        : null;
+    const postsPromise = this.prisma.questioning.findMany({
+      take: quantity,
+      skip: page * quantity,
+      where: {
+        ...(search
+          ? {
+              content: {
+                contains: search,
+                mode: 'insensitive',
+              },
+            }
+          : {}),
+        ...(tag
+          ? {
+              tags: {
+                has: tag,
+              },
+            }
+          : {}),
+      },
       orderBy: {
         createdAt: 'desc',
       },
@@ -94,14 +128,29 @@ export class QuestioningsService {
         },
       },
     });
+    const [total, posts] = await Promise.all([totalsPromise, postsPromise]);
+    return { posts, total };
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} questioning`;
+    return this.prisma.questioning.findFirst({ where: { id: id } });
   }
 
-  update(id: number, updateQuestioningDto: UpdateQuestioningDto) {
-    return `This action updates a #${id} questioning`;
+  async update(
+    id: number,
+    userId: number,
+    updateQuestioningDto: UpdateQuestioningDto,
+  ) {
+    const questioning = await this.prisma.questioning.findFirst({
+      where: { id },
+    });
+    if (questioning.ownerId !== userId) {
+      throw new ForbiddenException();
+    }
+    return this.prisma.questioning.update({
+      where: { id },
+      data: updateQuestioningDto,
+    });
   }
 
   async remove(id: number, userId: number) {
@@ -110,9 +159,7 @@ export class QuestioningsService {
     });
 
     if (userId !== questioning.ownerId) {
-      throw new UnauthorizedException(
-        `userId: ${userId}, ownerId: ${questioning.ownerId}`,
-      );
+      throw new ForbiddenException();
     }
     const url: string[] = [];
     if (questioning.questioningAudio) {

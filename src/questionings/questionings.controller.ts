@@ -11,6 +11,9 @@ import {
   Req,
   UseInterceptors,
   UploadedFiles,
+  Query,
+  DefaultValuePipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { QuestioningsService } from './questionings.service';
 import { CreateQuestioningDto } from './dto/create-questioning.dto';
@@ -48,8 +51,12 @@ export class QuestioningsController {
   }
 
   @Get()
-  findAll() {
-    return this.questioningsService.findAll();
+  findAll(
+    @Query('page', new DefaultValuePipe(0), ParseIntPipe) page: number,
+    @Query('search') search?: string,
+    @Query('tag') tag?: string,
+  ) {
+    return this.questioningsService.findAll({ page, search, tag });
   }
 
   @Get(':id')
@@ -58,11 +65,18 @@ export class QuestioningsController {
   }
 
   @Patch(':id')
+  @UseGuards(AccessTokenGuard)
   update(
     @Param('id') id: string,
     @Body() updateQuestioningDto: UpdateQuestioningDto,
+    @Req() req,
   ) {
-    return this.questioningsService.update(+id, updateQuestioningDto);
+    const user: JwtPayload = req.user;
+    return this.questioningsService.update(
+      +id,
+      +user.sub,
+      updateQuestioningDto,
+    );
   }
 
   @Delete(':id')

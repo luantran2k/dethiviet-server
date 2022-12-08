@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateExplainingDto } from './dto/create-explaining.dto';
 import { UpdateExplainingDto } from './dto/update-explaining.dto';
@@ -42,7 +46,7 @@ export class ExplainingsService {
       where: { id },
     });
     if (explaining.ownerId !== userId) {
-      throw new UnauthorizedException();
+      throw new ForbiddenException();
     }
     return this.prisma.explaining.update({
       where: { id },
@@ -55,7 +59,7 @@ export class ExplainingsService {
       where: { id },
     });
     if (explaining.ownerId !== userId) {
-      throw new UnauthorizedException();
+      throw new ForbiddenException();
     }
     return this.prisma.explaining.delete({ where: { id } });
   }
