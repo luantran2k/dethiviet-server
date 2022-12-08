@@ -26,8 +26,7 @@ model User {
   createdAt        DateTime           @default(now())
   Questioning      Questioning[]
   Explaining       Explaining[]
-  sendError        Error[]            @relation("userReport")
-  receiveError     Error[]            @relation("ownerExam")
+  sendError        Report[]           @relation("userReport")
 }
 
 model Exam {
@@ -52,6 +51,7 @@ model Exam {
   UsercompleteExam UserCompleteExam[]
   createdAt        DateTime           @default(now())
   updatedAt        DateTime?          @updatedAt
+  Report           Report[]
 }
 
 model UserFavoriteExam {
@@ -137,11 +137,15 @@ model Explaining {
   updatedAt     DateTime?   @updatedAt
 }
 
-model Error {
-  id      Int    @id @default(autoincrement())
-  user    User   @relation("userReport", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  userId  Int
-  owner   User   @relation("ownerExam", fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  ownerId Int
-  content String
+model Report {
+  id        Int       @id @default(autoincrement())
+  user      User      @relation("userReport", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId    Int
+  exam      Exam?     @relation(fields: [examId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  examId    Int?
+  image     String?
+  content   String
+  state     String    @default("pending")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
 }

@@ -12,6 +12,7 @@ import { QuestionsModule } from './questions/questions.module';
 import { PartsModule } from './parts/parts.module';
 import { QuestioningsModule } from './questionings/questionings.module';
 import { ExplainingsModule } from './explainings/explainings.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ExplainingsModule } from './explainings/explainings.module';
     PartsModule,
     QuestioningsModule,
     ExplainingsModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
