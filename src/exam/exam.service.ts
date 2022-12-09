@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
 } from '@nestjs/common';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
@@ -146,7 +147,7 @@ export class ExamService {
                   select: {
                     id: true,
                     value: true,
-                    isTrue: withAnswer,
+                    isTrue: withAnswer || false,
                   },
                 },
               },
@@ -430,12 +431,18 @@ export class ExamService {
       orderBy: {
         createdAt: 'desc',
       },
+      where: {
+        isPublic: true,
+      },
       select: selectExam,
     });
 
     const examsWithCount = await this.prisma.userCompleteExam.groupBy({
       by: ['examId'],
       where: {
+        exam: {
+          isPublic: true,
+        },
         completeAt: {
           gte: Ultis.getThisFirstDateOfMonth(),
           lte: Ultis.getThisLastDateOfMonth(),
@@ -454,7 +461,7 @@ export class ExamService {
     const popularMonthExamsPromise = examsWithCount.map(async (exam) => {
       return {
         exam: await this.prisma.exam.findFirst({
-          where: { id: exam.examId },
+          where: { id: exam.examId, isPublic: true },
           include: {
             owner: {
               select: selectUser,
@@ -543,7 +550,23 @@ export class ExamService {
     return { exams };
   }
 
-  getResult(resultId: number) {
-    return this.prisma.userCompleteExam.findFirst({ where: { id: resultId } });
+  async getResult(resultId: number, userId: number) {
+    const result = await this.prisma.userCompleteExam.findFirst({
+      where: { id: resultId },
+    });
+    if (result.userId !== userId) {
+      throw new ForbiddenException();
+    }
+    return result;
+  }
+
+  async deleteResult(resultId: number, userId: number) {
+    const result = await this.prisma.userCompleteExam.findFirst({
+      where: { id: resultId },
+    });
+    if (result.userId !== userId) {
+      throw new ForbiddenException();
+    }
+    return this.prisma.userCompleteExam.delete({ where: { id: resultId } });
   }
 }

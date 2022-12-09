@@ -129,17 +129,20 @@ export class QuestionsService {
 
   async remove(id: number, question?: QuestionEntity) {
     question = question ? question : await this.findOne(id);
-    let removeAudio = undefined,
-      removeImages = undefined;
+    const urls: string[] = [];
     if (question.questionAudio) {
-      removeAudio = this.deleteQuesitonAudio(id);
+      urls.push(question.questionAudio);
     }
     if (question.questionImages) {
-      removeImages = question.questionImages.map((url) => {
-        return this.deleteQuestionImage(id, url);
-      });
+      urls.push(...question.questionImages);
     }
-    await Promise.all([removeAudio, ...removeImages]);
+    const deleteMediaPromise = urls.map((url) => {
+      return this.cloudinary.removeFile(
+        Ultis.getPublicId(url),
+        url.includes('image') ? 'image' : 'video',
+      );
+    });
+    await Promise.all(deleteMediaPromise);
     return this.prisma.question.delete({ where: { id } });
   }
 }

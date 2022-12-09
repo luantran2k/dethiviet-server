@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   Injectable,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -42,10 +44,13 @@ export class AuthService {
   async signIn(data: AuthDto) {
     // Check if user exists
     const user = await this.usersService.findByUsername(data.username);
-    if (!user) throw new BadRequestException('User does not exist');
+    if (!user)
+      throw new BadRequestException(
+        'Tên người dùng không tồn tại, vui lòng thử lại',
+      );
     const passwordMatches = await bcrypt.compare(data.password, user.password);
     if (!passwordMatches)
-      throw new BadRequestException('Password is incorrect');
+      throw new BadRequestException('Mật khẩu không đúng, vui lòng thử lại');
     const tokens = await this.getTokens(user.id, user.username);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
     const { password, refreshToken: rfToken, ...userInfo } = user;

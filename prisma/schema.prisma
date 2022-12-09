@@ -55,9 +55,9 @@ model Exam {
 }
 
 model UserFavoriteExam {
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId     Int
-  exam       Exam     @relation(fields: [examId], references: [id])
+  exam       Exam     @relation(fields: [examId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   examId     Int
   assignedAt DateTime @default(now())
 
@@ -66,9 +66,9 @@ model UserFavoriteExam {
 
 model UserCompleteExam {
   id            Int      @id @default(autoincrement())
-  user          User     @relation(fields: [userId], references: [id])
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId        Int
-  exam          Exam     @relation(fields: [examId], references: [id])
+  exam          Exam     @relation(fields: [examId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   examId        Int
   score         Int?
   completeAt    DateTime @default(now())

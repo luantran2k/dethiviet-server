@@ -95,7 +95,14 @@ export class ExamController {
   @UseGuards(AccessTokenGuard)
   getResult(@Param('resultId') resultId: string, @Req() req) {
     const user: JwtPayload = req.user;
-    return this.examService.getResult(+resultId);
+    return this.examService.getResult(+resultId, +user.sub);
+  }
+
+  @Delete('result/:resultId')
+  @UseGuards(AccessTokenGuard)
+  deleteResult(@Param('resultId') resultId: string, @Req() req) {
+    const user: JwtPayload = req.user;
+    return this.examService.deleteResult(+resultId, +user.sub);
   }
   //@UseGuards(AccessTokenGuard)
   @Get(':id')

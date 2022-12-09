@@ -122,7 +122,7 @@ export class PartsService {
     if (part) {
       const questionRemove = part.questions.map((question) => {
         if (isExamOrignal) {
-          this.questionsService.remove(question.id, question);
+          return this.questionsService.remove(question.id, question);
         }
       });
       const partAudioRemove = this.deletePartAudio(id, {
