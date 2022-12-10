@@ -1,18 +1,18 @@
 import { Module } from '@nestjs/common';
-import { MulterModule } from '@nestjs/platform-express';
+import { AnswersModule } from './answers/answers.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { ExamModule } from './exam/exam.module';
-import { PrismaModule } from './prisma/prisma.module';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { AnswersModule } from './answers/answers.module';
-import { QuestionsModule } from './questions/questions.module';
-import { PartsModule } from './parts/parts.module';
-import { QuestioningsModule } from './questionings/questionings.module';
 import { ExplainingsModule } from './explainings/explainings.module';
+import { PartsModule } from './parts/parts.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { QuestioningsModule } from './questionings/questionings.module';
+import { QuestionsModule } from './questions/questions.module';
 import { ReportsModule } from './reports/reports.module';
+import { UsersModule } from './users/users.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -27,6 +27,7 @@ import { ReportsModule } from './reports/reports.module';
     QuestioningsModule,
     ExplainingsModule,
     ReportsModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],
