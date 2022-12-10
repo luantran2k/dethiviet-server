@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UsersService } from 'src/users/users.service';
@@ -20,7 +24,7 @@ export class AccessTokenStrategy extends PassportStrategy(Strategy, 'jwt') {
   async validate(payload: JwtPayload) {
     const user = await this.userSevice.findByUsername(payload.username);
     if (!user.refreshToken) {
-      throw new ForbiddenException('Vui lòng đăng nhập');
+      throw new UnauthorizedException('Vui lòng đăng nhập');
     }
     return payload;
   }
