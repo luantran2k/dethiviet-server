@@ -3,6 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { PartsService } from 'src/parts/parts.service';
@@ -119,7 +120,7 @@ export class ExamService {
       withAnswer?: boolean;
     },
   ) {
-    const { UserFavoriteExam, ...result } = await this.prisma.exam.findFirst({
+    const exam = await this.prisma.exam.findFirst({
       where: { id },
       include: {
         owner: includeOwner && {
@@ -162,6 +163,10 @@ export class ExamService {
       },
     });
 
+    if (!exam) {
+      throw new NotFoundException('Bài kiểm tra không tồn tại');
+    }
+    const { UserFavoriteExam, ...result } = exam;
     let relatedExams = undefined;
 
     if (withRelatedExams) {

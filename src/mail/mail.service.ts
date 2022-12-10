@@ -7,6 +7,7 @@ import {
   GOOGLE_MAILER_REFRESH_TOKEN,
 } from './const';
 import { createTransport } from 'nodemailer';
+import { InternalServerErrorException } from '@nestjs/common/exceptions';
 
 export interface AppMail {
   email: string;
@@ -59,8 +60,10 @@ export class MailService {
 
       await transport.sendMail(mailOptions);
       return { message: 'Gửi mail thành công' };
-    } catch (e) {
-      return e;
+    } catch {
+      throw new InternalServerErrorException(
+        'Lỗi khi gửi email, vui lòng thử lại',
+      );
     }
   }
 }

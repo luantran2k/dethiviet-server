@@ -1,3 +1,5 @@
+import { MailModule } from './../mail/mail.module';
+import { MailService } from './../mail/mail.service';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
@@ -8,7 +10,7 @@ import { AuthService } from './auth.service';
 import { RefreshTokenStrategy } from './refreshToken.strategy';
 
 @Module({
-  imports: [UsersModule, JwtModule.register({}), ConfigModule],
+  imports: [UsersModule, JwtModule.register({}), ConfigModule, MailModule],
   providers: [AuthService, AccessTokenStrategy, RefreshTokenStrategy],
   exports: [AuthService],
   controllers: [AuthController],

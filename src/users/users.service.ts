@@ -42,8 +42,19 @@ export class UsersService {
     return this.prisma.user.findFirst({ where: { username } });
   }
 
+  findByEmail(email: string) {
+    return this.prisma.user.findFirst({
+      where: { email },
+      select: { email: true },
+    });
+  }
+
   update(id: number, updateUserDto: UpdateUserDto) {
     return this.prisma.user.update({ where: { id }, data: updateUserDto });
+  }
+
+  updateByEmail(email: string, updateUserDto: UpdateUserDto) {
+    return this.prisma.user.update({ where: { email }, data: updateUserDto });
   }
 
   remove(id: number) {

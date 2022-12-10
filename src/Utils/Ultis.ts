@@ -14,5 +14,8 @@ const Ultis = {
     const today = new Date();
     return new Date(today.getFullYear(), today.getMonth() + 1, 0);
   },
+  getRndInteger: (min, max) => {
+    return Math.floor(Math.random() * (max - min)) + min;
+  },
 };
 export default Ultis;

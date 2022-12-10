@@ -6,12 +6,13 @@ import {
   Req,
   UseGuards,
   ForbiddenException,
+  Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Request } from 'express';
+import { query, Request } from 'express';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { AccessTokenGuard } from './accessToken.guard';
-import { AuthService } from './auth.service';
+import { AuthService, ChangePasswordInfo } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
 import { RefreshTokenGuard } from './refreshToken.guard';
 
@@ -52,5 +53,15 @@ export class AuthController {
     } catch {
       throw new ForbiddenException('Khoong the refresh token');
     }
+  }
+
+  @Post('getChangePasswordCode')
+  getChangePasswordCode(@Body() body: { email: string }) {
+    return this.authService.getChangePasswordCode(body.email);
+  }
+
+  @Post('changePassword')
+  changePassword(@Body() body: ChangePasswordInfo) {
+    return this.authService.changePassword(body);
   }
 }
