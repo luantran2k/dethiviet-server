@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -41,8 +42,11 @@ export class UsersController {
   }
 
   @Get(':id/exams/own')
-  getOwnExams(@Param('id') id: string) {
-    return this.usersService.getOwnExams(+id);
+  getOwnExams(
+    @Param('id') id: string,
+    @Query('userRequestId') userRequestId: string,
+  ) {
+    return this.usersService.getOwnExams(+id, +userRequestId);
   }
 
   @Get(':id/exams/completed')

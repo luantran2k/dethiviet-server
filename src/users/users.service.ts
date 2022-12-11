@@ -86,10 +86,11 @@ export class UsersService {
     });
   }
 
-  async getOwnExams(id: number) {
+  async getOwnExams(id: number, userRequestId?: number) {
     const exams = await this.prisma.exam.findMany({
       where: {
         ownerId: id,
+        ...(id === userRequestId ? {} : { isPublic: true }),
       },
       orderBy: {
         createdAt: 'desc',
