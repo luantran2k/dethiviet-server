@@ -4,7 +4,11 @@ export class CreateExamDto {
   @Type(() => Number)
   ownerId: number;
   title: string;
-  @Type(() => Boolean)
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
   isPublic?: boolean;
   @Type(() => Number)
   duration?: number;
@@ -16,4 +20,5 @@ export class CreateExamDto {
   subjectName?: string;
   grade?: string;
   publishers?: string;
+  securityCode?: string;
 }

@@ -38,6 +38,9 @@ export class ExamService {
     documentFile: Express.Multer.File,
   ) {
     const data = createExamDto;
+    if (data.isPublic === false) {
+      data.securityCode = Ultis.getRandomString(5);
+    }
     const documentUpload = await this.uploadDocumentFile(documentFile);
     if (documentUpload?.secure_url) {
       return this.prisma.exam.create({
@@ -240,6 +243,10 @@ export class ExamService {
   }
 
   update(id: number, updateExamDto: UpdateExamDto) {
+    if (updateExamDto.isPublic === false) {
+      updateExamDto.securityCode = Ultis.getRandomString(5);
+    }
+
     return this.prisma.exam.update({
       where: { id },
       data: updateExamDto,
@@ -421,6 +428,7 @@ export class ExamService {
     };
     const selectExam = {
       id: true,
+      isPublic: true,
       ownerId: true,
       title: true,
       date: true,
