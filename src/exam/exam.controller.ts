@@ -45,6 +45,12 @@ export class ExamController {
     return this.examService.create(createExamDto, documentFile);
   }
 
+  @Post('uploadRaw')
+  @UseInterceptors(FileInterceptor('documentFile'))
+  uploadRaw(@UploadedFile() documentFile: Express.Multer.File) {
+    return this.examService.uploadRaw(documentFile);
+  }
+
   @Get()
   @ApiResponse({ type: ExamEntity, isArray: true })
   findAll(

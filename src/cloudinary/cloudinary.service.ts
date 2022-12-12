@@ -15,11 +15,12 @@ export class CloudinaryService {
   async uploadFile(
     file: Express.Multer.File,
     options: UploadOptions,
+    resource_type?: resourceType,
   ): Promise<UploadApiResponse | UploadApiErrorResponse> {
     return new Promise((resolve, reject) => {
       const upload = v2.uploader.upload_stream(
         {
-          resource_type: 'auto',
+          resource_type: resource_type || 'auto',
           folder:
             process.env.CLOUDINARY_ROOT_FOLDER + '/' + options.folderName ||
             options.folderName,

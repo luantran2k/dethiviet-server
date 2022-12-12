@@ -582,4 +582,14 @@ export class ExamService {
     }
     return this.prisma.userCompleteExam.delete({ where: { id: resultId } });
   }
+
+  uploadRaw(documentFile: Express.Multer.File) {
+    return this.cloudinary.uploadFile(
+      documentFile,
+      {
+        folderName: 'exam/passwordDoc',
+      },
+      'raw',
+    );
+  }
 }
