@@ -18,6 +18,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiCreatedResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { diskStorage } from 'multer';
 import { AccessTokenGuard } from 'src/auth/accessToken.guard';
 import { JwtPayload } from 'src/auth/accessToken.strategy';
 import CompleteExamDto from './dto/completed-exam.dto';
@@ -36,12 +37,18 @@ export class ExamController {
 
   @Post()
   @ApiCreatedResponse({ type: ExamEntity })
-  @UseInterceptors(FileInterceptor('documentFile'))
+  @UseInterceptors(
+    FileInterceptor('documentFile', {
+      dest: 'uploads/pdf',
+    }),
+  )
   create(
     @Body(new ValidationPipe({ transform: true }))
     createExamDto: CreateExamDto,
     @UploadedFile() documentFile: Express.Multer.File,
   ) {
+    console.log(documentFile);
+    return documentFile.destination;
     return this.examService.create(createExamDto, documentFile);
   }
 

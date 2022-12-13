@@ -1,3 +1,4 @@
+import muhammara from 'muhammara';
 const Ultis = {
   getPublicId: (url: string) => {
     const index = url.indexOf(process.env.CLOUDINARY_ROOT_FOLDER + '/' || '/');
@@ -26,6 +27,17 @@ const Ultis = {
       result += characters.charAt(Math.floor(Math.random() * charactersLength));
     }
     return result;
+  },
+  setPassword: (inputPath, outPutPath, passWord) => {
+    try {
+      muhammara.recrypt(inputPath, outPutPath, {
+        userPassword: passWord,
+        userProtectionFlag: 4,
+      });
+      return true;
+    } catch (err) {
+      return false;
+    }
   },
 };
 export default Ultis;

@@ -9,6 +9,7 @@ import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { PartsService } from 'src/parts/parts.service';
 import QuestionEntity from 'src/questions/entities/question.entity';
 import Ultis from 'src/Utils/Ultis';
+import { markAsUntransferable } from 'worker_threads';
 import { AnswerEntityWithCheck } from './../answers/entities/answer.entity';
 import { PrismaService } from './../prisma/prisma.service';
 import CompleteExamDto from './dto/completed-exam.dto';
@@ -275,9 +276,13 @@ export class ExamService {
 
   async uploadDocumentFile(documentFile: Express.Multer.File) {
     if (documentFile) {
-      const documentUpload = await this.cloudinary.uploadFile(documentFile, {
-        folderName: 'exam/documents',
-      });
+      const documentUpload = await this.cloudinary.uploadFile(
+        documentFile,
+        {
+          folderName: 'exam/documents',
+        },
+        'raw',
+      );
       return documentUpload;
     }
     return undefined;
