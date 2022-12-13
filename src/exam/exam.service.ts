@@ -39,14 +39,15 @@ export class ExamService {
     documentFile: Express.Multer.File,
   ) {
     const data = createExamDto;
-    if (data.isPublic === false) {
-      data.securityCode = Ultis.getRandomString(5);
-    }
-    const documentUpload = await this.uploadDocumentFile(documentFile);
-    if (documentUpload?.secure_url) {
-      return this.prisma.exam.create({
-        data: { ...createExamDto, documentUrl: documentUpload.secure_url },
-      });
+    const password = Ultis.getRandomString(10);
+    data.securityCode = password;
+    if (documentFile) {
+      const documentUpload = await this.upLoadDocument(documentFile, password);
+      if (documentUpload?.secure_url) {
+        return this.prisma.exam.create({
+          data: { ...createExamDto, documentUrl: documentUpload.secure_url },
+        });
+      }
     }
     return this.prisma.exam.create({
       data: createExamDto,
@@ -244,10 +245,6 @@ export class ExamService {
   }
 
   update(id: number, updateExamDto: UpdateExamDto) {
-    if (updateExamDto.isPublic === false) {
-      updateExamDto.securityCode = Ultis.getRandomString(5);
-    }
-
     return this.prisma.exam.update({
       where: { id },
       data: updateExamDto,
@@ -596,5 +593,18 @@ export class ExamService {
       },
       'raw',
     );
+  }
+
+  async upLoadDocument(documentFile: Express.Multer.File, password) {
+    const inputFile = documentFile.path;
+    const outputFile = inputFile.replace('input', 'output');
+    Ultis.setPassword(inputFile, outputFile, password);
+    const documentUpload = await this.cloudinary.uploadFileOnDisk(outputFile, {
+      resource_type: 'raw',
+      folder: 'dethiviet/exam/documents',
+    });
+    Ultis.removeFile(inputFile);
+    Ultis.removeFile(outputFile);
+    return documentUpload;
   }
 }

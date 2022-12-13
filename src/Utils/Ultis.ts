@@ -1,4 +1,6 @@
-import muhammara from 'muhammara';
+import { InternalServerErrorException } from '@nestjs/common/exceptions';
+import { unlink } from 'fs';
+import { recrypt } from 'muhammara';
 const Ultis = {
   getPublicId: (url: string) => {
     const index = url.indexOf(process.env.CLOUDINARY_ROOT_FOLDER + '/' || '/');
@@ -28,16 +30,21 @@ const Ultis = {
     }
     return result;
   },
-  setPassword: (inputPath, outPutPath, passWord) => {
+  setPassword: (inputPath: string, outPutPath: string, passWord: string) => {
     try {
-      muhammara.recrypt(inputPath, outPutPath, {
+      recrypt(inputPath, outPutPath, {
         userPassword: passWord,
         userProtectionFlag: 4,
       });
       return true;
     } catch (err) {
-      return false;
+      throw new InternalServerErrorException(err.toString());
     }
+  },
+  removeFile: (path: string) => {
+    unlink(path, (err) => {
+      console.log("Can't remove file " + path);
+    });
   },
 };
 export default Ultis;

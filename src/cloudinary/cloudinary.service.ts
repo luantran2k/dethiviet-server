@@ -4,6 +4,7 @@ import {
   UploadApiErrorResponse,
   v2,
   UploadApiOptions,
+  UploadResponseCallback,
 } from 'cloudinary';
 import * as toStream from 'buffer-to-stream';
 
@@ -59,5 +60,14 @@ export class CloudinaryService {
         }`,
       )
       .execute();
+  }
+
+  uploadFileOnDisk(
+    path: string,
+    options: UploadApiOptions,
+    callback?: UploadResponseCallback,
+    resource_type?: resourceType,
+  ) {
+    return v2.uploader.upload(path, options, callback);
   }
 }

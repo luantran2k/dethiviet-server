@@ -19,6 +19,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiCreatedResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { AccessTokenGuard } from 'src/auth/accessToken.guard';
 import { JwtPayload } from 'src/auth/accessToken.strategy';
 import CompleteExamDto from './dto/completed-exam.dto';
@@ -39,7 +40,12 @@ export class ExamController {
   @ApiCreatedResponse({ type: ExamEntity })
   @UseInterceptors(
     FileInterceptor('documentFile', {
-      dest: 'uploads/pdf',
+      storage: diskStorage({
+        destination: 'uploads/pdfs/input',
+        filename: function (req, file, cb) {
+          cb(null, Date.now() + extname(file.originalname)); //Appending extension
+        },
+      }),
     }),
   )
   create(
@@ -47,8 +53,6 @@ export class ExamController {
     createExamDto: CreateExamDto,
     @UploadedFile() documentFile: Express.Multer.File,
   ) {
-    console.log(documentFile);
-    return documentFile.destination;
     return this.examService.create(createExamDto, documentFile);
   }
 
