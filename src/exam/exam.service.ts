@@ -642,27 +642,18 @@ export class ExamService {
   // }
 
   async upLoadDocument(documentFile: Express.Multer.File, password) {
-    const inputFile = documentFile.path;
+    const inputFile = join(__dirname, '..', '..', documentFile.path);
     const outputFile = inputFile.replace('input', 'output');
     let documentUpload = undefined;
     console.log('InputPath: ' + inputFile);
     console.log('OutPath: ' + outputFile);
-    try {
-      Ultis.setPassword(inputFile, outputFile, password);
-      documentUpload = await this.cloudinary.uploadFileOnDisk(
-        outputFile,
-        'raw',
-        {
-          folder: 'dethiviet/exam/documents',
-        },
-      );
-    } catch (error) {
-      console.log(error);
-    } finally {
-      Ultis.removeFile(inputFile);
-      Ultis.removeFile(outputFile);
-      return documentUpload;
-    }
+    Ultis.setPassword(inputFile, outputFile, password);
+    documentUpload = await this.cloudinary.uploadFileOnDisk(outputFile, 'raw', {
+      folder: 'dethiviet/exam/documents',
+    });
+    Ultis.removeFile(inputFile);
+    Ultis.removeFile(outputFile);
+    return documentUpload;
   }
 
   async changeSecurityCode(id) {
