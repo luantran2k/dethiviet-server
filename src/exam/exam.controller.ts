@@ -54,6 +54,8 @@ export class ExamController {
     createExamDto: CreateExamDto,
     @UploadedFile() documentFile: Express.Multer.File,
   ) {
+    const { buffer, ...file } = documentFile;
+    console.log(file);
     return this.examService.create(createExamDto, documentFile);
   }
 
