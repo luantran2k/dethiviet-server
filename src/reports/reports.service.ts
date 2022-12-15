@@ -46,7 +46,11 @@ export class ReportsService {
 
   async remove(id: number, userId: number) {
     const report = await this.prisma.report.findFirst({ where: { id } });
-    if (report?.userId !== userId) {
+    const exam = await this.prisma.exam.findFirst({
+      where: { id: report.examId },
+      select: { ownerId: true },
+    });
+    if (exam?.ownerId !== userId) {
       throw new ForbiddenException();
     }
     if (report.image) {

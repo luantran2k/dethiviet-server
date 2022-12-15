@@ -79,6 +79,7 @@ export class ExamService {
         subjectName: true,
         grade: true,
         createdAt: true,
+        documentUrl: true,
         owner: {
           select: {
             id: true,
