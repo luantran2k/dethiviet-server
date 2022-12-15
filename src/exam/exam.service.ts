@@ -642,7 +642,7 @@ export class ExamService {
   // }
 
   async upLoadDocument(documentFile: Express.Multer.File, password) {
-    const inputFile = join(__dirname, '..', '..', documentFile.path);
+    const inputFile = documentFile.path;
     const outputFile = inputFile.replace('input', 'output');
     let documentUpload = undefined;
     console.log('InputPath: ' + inputFile);
