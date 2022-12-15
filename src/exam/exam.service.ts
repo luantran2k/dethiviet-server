@@ -644,17 +644,23 @@ export class ExamService {
   async upLoadDocument(documentFile: Express.Multer.File, password) {
     const inputFile = documentFile.path;
     const outputFile = inputFile.replace('input', 'output');
-    Ultis.setPassword(inputFile, outputFile, password);
-    const documentUpload = await this.cloudinary.uploadFileOnDisk(
-      outputFile,
-      'raw',
-      {
-        folder: 'dethiviet/exam/documents',
-      },
-    );
-    Ultis.removeFile(inputFile);
-    Ultis.removeFile(outputFile);
-    return documentUpload;
+    let documentUpload = undefined;
+    try {
+      Ultis.setPassword(inputFile, outputFile, password);
+      documentUpload = await this.cloudinary.uploadFileOnDisk(
+        outputFile,
+        'raw',
+        {
+          folder: 'dethiviet/exam/documents',
+        },
+      );
+    } catch (error) {
+      console.log(error);
+    } finally {
+      Ultis.removeFile(inputFile);
+      Ultis.removeFile(outputFile);
+      return documentUpload;
+    }
   }
 
   async changeSecurityCode(id) {

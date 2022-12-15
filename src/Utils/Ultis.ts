@@ -39,6 +39,7 @@ const Ultis = {
       });
       return true;
     } catch (err) {
+      console.log(err);
       throw new InternalServerErrorException(err.toString());
     }
   },
