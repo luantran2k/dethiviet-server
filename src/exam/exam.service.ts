@@ -119,12 +119,14 @@ export class ExamService {
       includeOwner,
       withRelatedExams,
       withAnswer,
+      securityCode,
     }: {
       userId?: number;
       includePart?: boolean;
       includeOwner?: boolean;
       withRelatedExams?: boolean;
       withAnswer?: boolean;
+      securityCode?: string;
     },
   ) {
     const exam = await this.prisma.exam.findFirst({
@@ -238,11 +240,36 @@ export class ExamService {
       const partWithQuestion = await Promise.all(partWithQuestionPromise);
       result.parts = partWithQuestion;
     }
-
+    const isAllowed = exam.allowedUserId.some((allowId) => allowId === userId);
+    if (
+      exam.isPublic === true ||
+      userId === exam.ownerId ||
+      isAllowed ||
+      exam.securityCode === securityCode
+    ) {
+      if (!isAllowed) {
+        await this.prisma.exam.update({
+          where: { id },
+          data: { allowedUserId: { push: userId } },
+        });
+      }
+      return {
+        ...result,
+        isFavorited: UserFavoriteExam[0]?.userId === userId ? true : false,
+        relatedExams: withRelatedExams ? relatedExams : undefined,
+      };
+    }
+    if (exam.isPublic === false && userId !== exam.ownerId) {
+      if (securityCode && exam.securityCode !== securityCode) {
+        throw new BadRequestException('Mã xác minh không đúng');
+      }
+    }
     return {
-      ...result,
-      isFavorited: UserFavoriteExam[0]?.userId === userId ? true : false,
-      relatedExams: withRelatedExams ? relatedExams : undefined,
+      id: undefined,
+      documentUrl: undefined,
+      parts: undefined,
+      isOriginal: undefined,
+      mess: 'need password',
     };
   }
 

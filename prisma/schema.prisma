@@ -46,6 +46,7 @@ model Exam {
   documentUrl      String?
   isOriginal       Boolean            @default(true)
   securityCode     String?
+  allowedUserId    Int[]
   parts            Part[]
   UserFavoriteExam UserFavoriteExam[]
   UsercompleteExam UserCompleteExam[]

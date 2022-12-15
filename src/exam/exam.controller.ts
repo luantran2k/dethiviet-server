@@ -18,6 +18,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiCreatedResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { JWT } from 'google-auth-library';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { AccessTokenGuard } from 'src/auth/accessToken.guard';
@@ -124,8 +125,10 @@ export class ExamController {
   //@UseGuards(AccessTokenGuard)
   @Get(':id')
   @ApiResponse({ type: ExamEntity })
+  @UseGuards(AccessTokenGuard)
   findOne(
     @Param('id') id: string,
+    @Req() req,
     @Query('userId') userId?: string,
     @Query('includePart', new DefaultValuePipe(false), ParseBoolPipe)
     includePart?: boolean,
@@ -135,13 +138,17 @@ export class ExamController {
     withRelatedExams?: boolean,
     @Query('withAnswer', new DefaultValuePipe(true), ParseBoolPipe)
     withAnswer?: boolean,
+    @Query('securityCode')
+    securityCode?: string,
   ) {
+    const user: JwtPayload = req.user;
     return this.examService.findOne(+id, {
-      userId: +userId,
+      userId: +user.sub,
       includePart,
       includeOwner,
       withRelatedExams,
       withAnswer,
+      securityCode,
     });
   }
 

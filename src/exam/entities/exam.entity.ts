@@ -19,5 +19,6 @@ export class ExamEntity implements Exam {
   updatedAt: Date;
   securityCode: string;
   isOriginal: boolean;
+  allowedUserId: number[];
   parts?: PartEntity[];
 }
