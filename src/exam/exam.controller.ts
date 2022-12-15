@@ -160,8 +160,10 @@ export class ExamController {
 
   @Delete(':id')
   @ApiResponse({ type: ExamEntity })
-  remove(@Param('id') id: string) {
-    return this.examService.remove(+id);
+  @UseGuards(AccessTokenGuard)
+  remove(@Param('id') id: string, @Req() req) {
+    const user: JwtPayload = req.user;
+    return this.examService.remove(+id, +user.sub);
   }
 
   @Post(':examId/favorite')

@@ -283,14 +283,26 @@ export class ExamService {
     const publicId = Ultis.getPublicId(url);
     return this.cloudinary.removeFile(publicId + '.pdf', 'raw');
   }
-  async remove(id: number) {
-    const exam = await this.findOne(id, { includePart: true });
-
+  async remove(id: number, userId: number) {
+    const exam = await this.prisma.exam.findFirst({
+      where: { id },
+      include: {
+        parts: {
+          include: {
+            questions: {
+              include: {
+                answers: true,
+              },
+            },
+          },
+        },
+      },
+    });
     if (exam?.documentUrl) {
       const res = await this.removeDocument(exam.documentUrl);
-      console.log(res);
     }
-    if (exam?.parts) {
+    if (exam?.parts && exam.parts.length > 0) {
+      console.log(exam.parts);
       const partRemove = exam.parts.map((part) => {
         return this.partsService.remove(part.id, part, exam.isOriginal);
       });
@@ -353,10 +365,14 @@ export class ExamService {
           (output, question, questionIndex) => {
             const resultQuestion =
               resultExam.parts[partIndex].questions[questionIndex];
+            let countCorrectAnswer = 0;
             const answers: AnswerEntityWithCheck[] = question.answers.map(
               (answer, answerIndex) => {
                 const resultAnswer = resultQuestion.answers[answerIndex];
                 if (resultAnswer.isTrue == Boolean(answer.isTrue)) {
+                  if (resultAnswer.isTrue === true) {
+                    countCorrectAnswer++;
+                  }
                   return {
                     ...answer,
                     isAnswerFail: false,
@@ -369,9 +385,9 @@ export class ExamService {
                 }
               },
             );
-            const isQuestionTrue = !answers.some(
-              (answer) => answer.isAnswerFail == true,
-            );
+            const isQuestionTrue =
+              !answers.some((answer) => answer.isAnswerFail == true) &&
+              countCorrectAnswer > 0;
             return [
               ...output,
               {
