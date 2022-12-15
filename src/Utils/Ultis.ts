@@ -1,6 +1,7 @@
 import { InternalServerErrorException } from '@nestjs/common/exceptions';
-import { unlink } from 'fs';
-import { recrypt } from 'muhammara';
+import { createWriteStream, unlink } from 'fs';
+import { get } from 'https';
+import muhammara, { createReader, recrypt } from 'muhammara';
 const Ultis = {
   getPublicId: (url: string) => {
     const index = url.indexOf(process.env.CLOUDINARY_ROOT_FOLDER + '/' || '/');
@@ -43,8 +44,37 @@ const Ultis = {
   },
   removeFile: (path: string) => {
     unlink(path, (err) => {
-      console.log("Can't remove file " + path);
+      if (err) {
+        console.log("Can't remove file " + path);
+      }
     });
+  },
+  downloadFileToDisk: (
+    url: string,
+    folder: string,
+    fileExtension: string,
+  ): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const path = folder + '/' + Date.now() + '.' + fileExtension;
+      get(url, (res) => {
+        const filePath = createWriteStream(path);
+        res.pipe(filePath);
+        filePath.on('finish', () => {
+          filePath.close();
+          resolve(path);
+        });
+      });
+    });
+  },
+
+  changePasswordFile: (filePath: string, oldPass: string, newPass: string) => {
+    const outputPath = filePath.replace('input', 'output');
+    recrypt(filePath, outputPath, {
+      userPassword: newPass,
+      password: oldPass,
+      userProtectionFlag: 4,
+    });
+    return outputPath;
   },
 };
 export default Ultis;

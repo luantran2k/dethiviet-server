@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import {
-  UploadApiResponse,
-  UploadApiErrorResponse,
-  v2,
-  UploadApiOptions,
-  UploadResponseCallback,
-} from 'cloudinary';
 import * as toStream from 'buffer-to-stream';
+import {
+  UploadApiErrorResponse,
+  UploadApiOptions,
+  UploadApiResponse,
+  UploadResponseCallback,
+  v2,
+} from 'cloudinary';
+import { createWriteStream, fstat } from 'fs';
+import { get } from 'https';
 
 export type resourceType = 'image' | 'javascript' | 'css' | 'video' | 'raw';
 export interface UploadOptions extends UploadApiOptions {}
@@ -64,10 +66,23 @@ export class CloudinaryService {
 
   uploadFileOnDisk(
     path: string,
-    options: UploadApiOptions,
-    callback?: UploadResponseCallback,
     resource_type?: resourceType,
+    options?: UploadApiOptions,
+    callback?: UploadResponseCallback,
   ) {
-    return v2.uploader.upload(path, options, callback);
+    return v2.uploader.upload(path, { resource_type, ...options }, callback);
+  }
+
+  downLoadFile(url: string, folder: string, fileExtension: string) {
+    const fileName = folder + Date.now() + '.' + fileExtension;
+    const file = createWriteStream(fileName);
+    const request = get(url, function (response) {
+      response.pipe(file);
+      // after download completed close filestream
+      file.on('finish', () => {
+        file.close();
+        console.log('Download Completed');
+      });
+    });
   }
 }

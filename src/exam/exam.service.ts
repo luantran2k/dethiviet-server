@@ -3,13 +3,14 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { join } from 'path';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { PartsService } from 'src/parts/parts.service';
 import QuestionEntity from 'src/questions/entities/question.entity';
 import Ultis from 'src/Utils/Ultis';
-import { markAsUntransferable } from 'worker_threads';
 import { AnswerEntityWithCheck } from './../answers/entities/answer.entity';
 import { PrismaService } from './../prisma/prisma.service';
 import CompleteExamDto from './dto/completed-exam.dto';
@@ -43,6 +44,7 @@ export class ExamService {
     data.securityCode = password;
     if (documentFile) {
       const documentUpload = await this.upLoadDocument(documentFile, password);
+      console.log(documentUpload?.public_id);
       if (documentUpload?.secure_url) {
         return this.prisma.exam.create({
           data: { ...createExamDto, documentUrl: documentUpload.secure_url },
@@ -250,15 +252,16 @@ export class ExamService {
       data: updateExamDto,
     });
   }
-
+  async removeDocument(url: string) {
+    const publicId = Ultis.getPublicId(url);
+    return this.cloudinary.removeFile(publicId + '.pdf', 'raw');
+  }
   async remove(id: number) {
     const exam = await this.findOne(id, { includePart: true });
 
     if (exam?.documentUrl) {
-      await this.cloudinary.removeFile(
-        Ultis.getPublicId(exam.documentUrl),
-        'image',
-      );
+      const res = await this.removeDocument(exam.documentUrl);
+      console.log(res);
     }
     if (exam?.parts) {
       const partRemove = exam.parts.map((part) => {
@@ -585,26 +588,69 @@ export class ExamService {
     return this.prisma.userCompleteExam.delete({ where: { id: resultId } });
   }
 
-  uploadRaw(documentFile: Express.Multer.File) {
-    return this.cloudinary.uploadFile(
-      documentFile,
-      {
-        folderName: 'exam/passwordDoc',
-      },
-      'raw',
-    );
-  }
+  // uploadRaw(documentFile: Express.Multer.File) {
+  //   return this.cloudinary.uploadFile(
+  //     documentFile,
+  //     {
+  //       folderName: 'exam/passwordDoc',
+  //     },
+  //     'raw',
+  //   );
+  // }
 
   async upLoadDocument(documentFile: Express.Multer.File, password) {
     const inputFile = documentFile.path;
     const outputFile = inputFile.replace('input', 'output');
     Ultis.setPassword(inputFile, outputFile, password);
-    const documentUpload = await this.cloudinary.uploadFileOnDisk(outputFile, {
-      resource_type: 'raw',
-      folder: 'dethiviet/exam/documents',
-    });
+    const documentUpload = await this.cloudinary.uploadFileOnDisk(
+      outputFile,
+      'raw',
+      {
+        folder: 'dethiviet/exam/documents',
+      },
+    );
     Ultis.removeFile(inputFile);
     Ultis.removeFile(outputFile);
     return documentUpload;
+  }
+
+  async changeSecurityCode(id) {
+    const exam = await this.prisma.exam.findFirst({ where: { id } });
+    const dataUpdate: UpdateExamDto = {};
+    const newSecurityCode = Ultis.getRandomString(10);
+    if (exam.documentUrl) {
+      const inputPath = await Ultis.downloadFileToDisk(
+        exam.documentUrl,
+        join(__dirname, '../', '../', 'uploads', 'pdfs', 'input'),
+        'pdf',
+      );
+      const outputPath = Ultis.changePasswordFile(
+        inputPath,
+        exam.securityCode,
+        newSecurityCode,
+      );
+      const response = await this.cloudinary.uploadFileOnDisk(
+        outputPath,
+        'raw',
+        {
+          folder: 'dethiviet/exam/documents',
+        },
+      );
+      await this.removeDocument(exam.documentUrl);
+      Ultis.removeFile(inputPath);
+      Ultis.removeFile(outputPath);
+      if (response.secure_url) {
+        dataUpdate.documentUrl = response.secure_url;
+      }
+    }
+    dataUpdate.securityCode = newSecurityCode;
+    return this.prisma.exam.update({
+      where: { id },
+      data: dataUpdate,
+      select: {
+        securityCode: true,
+        documentUrl: true,
+      },
+    });
   }
 }

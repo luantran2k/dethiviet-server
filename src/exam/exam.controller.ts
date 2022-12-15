@@ -56,11 +56,11 @@ export class ExamController {
     return this.examService.create(createExamDto, documentFile);
   }
 
-  @Post('uploadRaw')
-  @UseInterceptors(FileInterceptor('documentFile'))
-  uploadRaw(@UploadedFile() documentFile: Express.Multer.File) {
-    return this.examService.uploadRaw(documentFile);
-  }
+  // @Post('uploadRaw')
+  // @UseInterceptors(FileInterceptor('documentFile'))
+  // uploadRaw(@UploadedFile() documentFile: Express.Multer.File) {
+  //   return this.examService.uploadRaw(documentFile);
+  // }
 
   @Get()
   @ApiResponse({ type: ExamEntity, isArray: true })
@@ -166,10 +166,15 @@ export class ExamController {
   }
 
   @Delete(':examId/favorite')
-  delteFavouriteExam(
-    @Param('examId') examId: string,
-    @Query('userId') userId: string,
-  ) {
-    return this.examService.deleteFavoriteExam(+examId, +userId);
+  @UseGuards(AccessTokenGuard)
+  delteFavouriteExam(@Param('examId') examId: string, @Req() req) {
+    const user: JwtPayload = req.user;
+    return this.examService.deleteFavoriteExam(+examId, +user.sub);
+  }
+
+  @Get(':examId/changeSecurityCode')
+  @UseGuards(AccessTokenGuard)
+  changeSecurityCode(@Param('examId') examId: string) {
+    return this.examService.changeSecurityCode(+examId);
   }
 }
