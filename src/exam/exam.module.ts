@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { existsSync, mkdirSync } from 'fs';
+import { join } from 'path';
 import { AuthModule } from 'src/auth/auth.module';
 import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 import { PartsService } from 'src/parts/parts.service';
@@ -12,4 +14,16 @@ import { ExamService } from './exam.service';
   controllers: [ExamController],
   providers: [ExamService],
 })
-export class ExamModule {}
+export class ExamModule {
+  constructor() {
+    const inputPath = join(__dirname, '..', '..', 'uploads', 'pdfs', 'input');
+    const outputPath = inputPath.replace('input', 'output');
+
+    if (!existsSync(inputPath)) {
+      mkdirSync(inputPath, { recursive: true });
+    }
+    if (!existsSync(outputPath)) {
+      mkdirSync(outputPath, { recursive: true });
+    }
+  }
+}

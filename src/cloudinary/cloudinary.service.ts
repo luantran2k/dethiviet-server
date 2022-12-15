@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import * as toStream from 'buffer-to-stream';
 import {
   UploadApiErrorResponse,
@@ -7,7 +7,7 @@ import {
   UploadResponseCallback,
   v2,
 } from 'cloudinary';
-import { createWriteStream, fstat } from 'fs';
+import { createWriteStream } from 'fs';
 import { get } from 'https';
 
 export type resourceType = 'image' | 'javascript' | 'css' | 'video' | 'raw';
@@ -70,7 +70,12 @@ export class CloudinaryService {
     options?: UploadApiOptions,
     callback?: UploadResponseCallback,
   ) {
-    return v2.uploader.upload(path, { resource_type, ...options }, callback);
+    try {
+      return v2.uploader.upload(path, { resource_type, ...options }, callback);
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException('Không tải tệp được');
+    }
   }
 
   downLoadFile(url: string, folder: string, fileExtension: string) {

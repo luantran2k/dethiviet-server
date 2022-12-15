@@ -18,9 +18,10 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiCreatedResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { existsSync, mkdirSync } from 'fs';
 import { JWT } from 'google-auth-library';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { extname, join } from 'path';
 import { AccessTokenGuard } from 'src/auth/accessToken.guard';
 import { JwtPayload } from 'src/auth/accessToken.strategy';
 import CompleteExamDto from './dto/completed-exam.dto';
@@ -42,7 +43,7 @@ export class ExamController {
   @UseInterceptors(
     FileInterceptor('documentFile', {
       storage: diskStorage({
-        destination: 'uploads/pdfs/input',
+        destination: join(__dirname, '..', '..', 'uploads', 'pdfs', 'input'),
         filename: function (req, file, cb) {
           cb(null, Date.now() + extname(file.originalname)); //Appending extension
         },
@@ -55,7 +56,13 @@ export class ExamController {
     @UploadedFile() documentFile: Express.Multer.File,
   ) {
     const { buffer, ...file } = documentFile;
+
     console.log(file);
+    if (existsSync(file.path)) {
+      console.log('file exist');
+    } else {
+      console.log('file does not exist');
+    }
     return this.examService.create(createExamDto, documentFile);
   }
 
