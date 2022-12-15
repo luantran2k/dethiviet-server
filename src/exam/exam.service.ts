@@ -645,6 +645,8 @@ export class ExamService {
     const inputFile = documentFile.path;
     const outputFile = inputFile.replace('input', 'output');
     let documentUpload = undefined;
+    console.log('InputPath: ' + inputFile);
+    console.log('OutPath: ' + outputFile);
     try {
       Ultis.setPassword(inputFile, outputFile, password);
       documentUpload = await this.cloudinary.uploadFileOnDisk(
