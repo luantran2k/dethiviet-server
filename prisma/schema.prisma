@@ -45,6 +45,7 @@ model Exam {
   publishers       String?
   documentUrl      String?
   isOriginal       Boolean            @default(true)
+  isSuggest        Boolean            @default(false)
   securityCode     String?
   allowedUserId    Int[]
   parts            Part[]

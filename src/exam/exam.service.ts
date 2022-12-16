@@ -520,6 +520,7 @@ export class ExamService {
       subjectName: true,
       grade: true,
       createdAt: true,
+      isSuggest: true,
       owner: {
         select: selectUser,
       },
@@ -570,12 +571,20 @@ export class ExamService {
       };
     });
 
-    const [lastestExams, popularMonthExams] = await Promise.all([
+    const suggestedExamPromise = this.prisma.exam.findMany({
+      where: { isSuggest: true },
+      take: quantity,
+      select: selectExam,
+    });
+
+    const [lastestExams, suggestedExam, popularMonthExams] = await Promise.all([
       lastestExamsPromise,
+      suggestedExamPromise,
       Promise.all(popularMonthExamsPromise),
     ]);
     return {
       lastestExams,
+      suggestedExam,
       popularMonthExams: popularMonthExams.map((exam) => ({
         ...exam.exam,
         completedCount: exam.completeCount.completeAt,
@@ -730,6 +739,26 @@ export class ExamService {
         securityCode: true,
         documentUrl: true,
       },
+    });
+  }
+  async suggest(examId, userId) {
+    const user = await this.prisma.user.findFirst({ where: { id: userId } });
+    if (!user.role.some((role) => role === 'admin')) {
+      throw new ForbiddenException('Bạn không có quyền đề xuất');
+    }
+    return this.prisma.exam.update({
+      where: { id: examId },
+      data: { isSuggest: true },
+    });
+  }
+  async removeSuggest(examId, userId) {
+    const user = await this.prisma.user.findFirst({ where: { id: userId } });
+    if (!user.role.some((role) => role === 'admin')) {
+      throw new ForbiddenException('Bạn không có quyền đề xuất');
+    }
+    return this.prisma.exam.update({
+      where: { id: examId },
+      data: { isSuggest: false },
     });
   }
 }

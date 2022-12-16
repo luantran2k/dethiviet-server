@@ -115,6 +115,7 @@ export class UsersService {
         email: true,
         createdAt: true,
         phone: true,
+        role: true,
       },
     });
   }

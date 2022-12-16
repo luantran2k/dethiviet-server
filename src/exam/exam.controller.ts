@@ -183,6 +183,19 @@ export class ExamController {
     return this.examService.addFavoriteExam(+examId, +userId);
   }
 
+  @Patch(':examId/suggest')
+  @UseGuards(AccessTokenGuard)
+  suggest(@Param('examId') examId: string, @Req() req) {
+    const user: JwtPayload = req.user;
+    return this.examService.suggest(+examId, user.sub);
+  }
+  @Delete(':examId/rmsuggest')
+  @UseGuards(AccessTokenGuard)
+  removeSuggest(@Param('examId') examId: string, @Req() req) {
+    const user: JwtPayload = req.user;
+    return this.examService.removeSuggest(+examId, user.sub);
+  }
+
   @Delete(':examId/favorite')
   @UseGuards(AccessTokenGuard)
   delteFavouriteExam(@Param('examId') examId: string, @Req() req) {
