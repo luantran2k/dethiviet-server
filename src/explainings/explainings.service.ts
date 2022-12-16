@@ -14,7 +14,7 @@ export class ExplainingsService {
     return this.prisma.explaining.create({
       data: {
         ...createExplainingDto,
-        ownerId: 1,
+        ownerId: ownerId,
       },
       include: {
         owner: {
