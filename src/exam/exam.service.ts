@@ -228,7 +228,13 @@ export class ExamService {
             return await this.prisma.question.findFirst({
               where: { id },
               include: {
-                answers: true,
+                answers: {
+                  select: {
+                    id: true,
+                    isTrue: withAnswer || false,
+                    value: true,
+                  },
+                },
               },
             });
           }),
