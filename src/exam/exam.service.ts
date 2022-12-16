@@ -10,6 +10,7 @@ import { join } from 'path';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { PartsService } from 'src/parts/parts.service';
 import QuestionEntity from 'src/questions/entities/question.entity';
+import QuestionTypeDatas from 'src/questions/QuestionTypes';
 import Ultis from 'src/Utils/Ultis';
 import { AnswerEntityWithCheck } from './../answers/entities/answer.entity';
 import { PrismaService } from './../prisma/prisma.service';
@@ -337,6 +338,8 @@ export class ExamService {
         subjectName: true,
         createdAt: true,
         isOriginal: true,
+        documentUrl: true,
+        securityCode: true,
         parts: {
           orderBy: {
             id: 'asc',
@@ -369,11 +372,16 @@ export class ExamService {
             let countCorrectAnswer = 0;
             const answers: AnswerEntityWithCheck[] = question.answers.map(
               (answer, answerIndex) => {
-                const resultAnswer = resultQuestion.answers[answerIndex];
-                if (resultAnswer.isTrue == Boolean(answer.isTrue)) {
-                  if (resultAnswer.isTrue === true) {
+                const resultAnswer = resultQuestion?.answers[answerIndex];
+                if (resultAnswer?.isTrue == Boolean(answer?.isTrue)) {
+                  if (resultAnswer.isTrue == true) {
                     countCorrectAnswer++;
                   }
+                  return {
+                    ...answer,
+                    isAnswerFail: false,
+                  };
+                } else if (resultAnswer == undefined) {
                   return {
                     ...answer,
                     isAnswerFail: false,
@@ -386,9 +394,37 @@ export class ExamService {
                 }
               },
             );
-            const isQuestionTrue =
-              !answers.some((answer) => answer.isAnswerFail == true) &&
-              countCorrectAnswer > 0;
+            let isQuestionTrue = false;
+            switch (part.type) {
+              case QuestionTypeDatas.MultipleChoice.value: {
+                if (
+                  !answers.some((answer) => answer.isAnswerFail == true) &&
+                  countCorrectAnswer > 0
+                ) {
+                  isQuestionTrue = true;
+                  break;
+                }
+                isQuestionTrue = false;
+                break;
+              }
+              case QuestionTypeDatas.MultiSelect.value: {
+                if (
+                  !answers.some((answer) => answer.isAnswerFail == true) &&
+                  answers.filter((answer) => answer.isTrue == true).length ===
+                    countCorrectAnswer &&
+                  countCorrectAnswer > 0
+                ) {
+                  isQuestionTrue = true;
+                  break;
+                }
+                isQuestionTrue = false;
+                break;
+              }
+              default: {
+                break;
+              }
+            }
+
             return [
               ...output,
               {
