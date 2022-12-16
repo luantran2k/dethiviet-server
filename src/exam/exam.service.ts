@@ -45,7 +45,6 @@ export class ExamService {
     data.securityCode = password;
     if (documentFile) {
       const documentUpload = await this.upLoadDocument(documentFile, password);
-      console.log(documentUpload?.public_id);
       if (documentUpload?.secure_url) {
         return this.prisma.exam.create({
           data: { ...createExamDto, documentUrl: documentUpload.secure_url },
@@ -304,7 +303,6 @@ export class ExamService {
       const res = await this.removeDocument(exam.documentUrl);
     }
     if (exam?.parts && exam.parts.length > 0) {
-      console.log(exam.parts);
       const partRemove = exam.parts.map((part) => {
         return this.partsService.remove(part.id, part, exam.isOriginal);
       });
@@ -691,8 +689,6 @@ export class ExamService {
     const inputFile = documentFile.path;
     const outputFile = inputFile.replace('input', 'output');
     let documentUpload = undefined;
-    console.log('InputPath: ' + inputFile);
-    console.log('OutPath: ' + outputFile);
     Ultis.setPassword(inputFile, outputFile, password);
     documentUpload = await this.cloudinary.uploadFileOnDisk(outputFile, 'raw', {
       folder: 'dethiviet/exam/documents',

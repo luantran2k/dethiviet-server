@@ -55,14 +55,6 @@ export class ExamController {
     createExamDto: CreateExamDto,
     @UploadedFile() documentFile: Express.Multer.File,
   ) {
-    const { buffer, ...file } = documentFile;
-
-    console.log(file);
-    if (existsSync(file.path)) {
-      console.log('file exist');
-    } else {
-      console.log('file does not exist');
-    }
     return this.examService.create(createExamDto, documentFile);
   }
 
