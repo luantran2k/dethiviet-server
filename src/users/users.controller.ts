@@ -1,3 +1,4 @@
+import { JwtPayload } from 'src/auth/accessToken.strategy';
 import { ExamEntity } from './../exam/entities/exam.entity';
 import {
   Body,
@@ -8,6 +9,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -60,8 +62,14 @@ export class UsersController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  @UseGuards(AccessTokenGuard)
+  update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @Req() req,
+  ) {
+    const user: JwtPayload = req.user;
+    return this.usersService.update(+id, updateUserDto, +user.sub);
   }
 
   @Delete(':id')

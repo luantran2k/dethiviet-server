@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -49,8 +55,33 @@ export class UsersService {
     });
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return this.prisma.user.update({ where: { id }, data: updateUserDto });
+  async update(
+    id: number,
+    updateUserDto: UpdateUserDto,
+    userRequestId?: number,
+  ) {
+    const { password, ...data } = updateUserDto;
+    const user = await this.prisma.user.findFirst({ where: { id } });
+    if (userRequestId && user.id !== userRequestId) {
+      throw new ForbiddenException(
+        'Bạn không có quyền chỉnh sửa' + userRequestId + ' ' + user.id,
+      );
+    }
+    if (password) {
+      const match = await bcrypt.compare(password, user.password);
+      if (!match) {
+        throw new BadRequestException('Mật khẩu không đúng');
+      }
+    }
+    return this.prisma.user.update({
+      where: { id },
+      data,
+      select: {
+        id: true,
+        email: true,
+        phone: true,
+      },
+    });
   }
 
   updateByEmail(email: string, updateUserDto: UpdateUserDto) {
@@ -82,6 +113,8 @@ export class UsersService {
         name: true,
         profileImg: true,
         email: true,
+        createdAt: true,
+        phone: true,
       },
     });
   }
