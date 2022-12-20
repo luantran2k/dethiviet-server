@@ -222,4 +222,12 @@ export class UsersService {
       data,
     };
   }
+
+  removeUsers(ids: number[]) {
+    return this.prisma.user.deleteMany({
+      where: {
+        id: { in: ids },
+      },
+    });
+  }
 }

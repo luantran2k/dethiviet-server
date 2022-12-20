@@ -27,6 +27,7 @@ export class MailService {
       oAuth2Client.setCredentials({
         refresh_token: GOOGLE_MAILER_REFRESH_TOKEN,
       });
+
       return oAuth2Client;
     })();
   }
@@ -60,7 +61,8 @@ export class MailService {
 
       await transport.sendMail(mailOptions);
       return { message: 'Gửi mail thành công' };
-    } catch {
+    } catch (error) {
+      console.log(error);
       throw new InternalServerErrorException(
         'Lỗi khi gửi email, vui lòng thử lại',
       );

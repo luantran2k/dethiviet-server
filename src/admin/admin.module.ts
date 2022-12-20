@@ -6,9 +6,10 @@ import { Module } from '@nestjs/common';
 import { ReportsModule } from 'src/reports/reports.module';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
-  imports: [UsersModule, ExamModule, ReportsModule, PrismaModule],
+  imports: [UsersModule, ExamModule, ReportsModule, PrismaModule, MailModule],
   controllers: [AdminController],
   providers: [AdminService],
 })

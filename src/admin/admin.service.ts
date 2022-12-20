@@ -1,8 +1,11 @@
+import { use } from 'passport';
 import { ReportsService } from './../reports/reports.service';
 import { UsersService } from './../users/users.service';
 import { PrismaService } from './../prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
 import { ExamService } from 'src/exam/exam.service';
+import { MailService } from 'src/mail/mail.service';
+import { async } from 'rxjs';
 
 @Injectable()
 export class AdminService {
@@ -11,6 +14,7 @@ export class AdminService {
     private readonly users: UsersService,
     private readonly exams: ExamService,
     private readonly reports: ReportsService,
+    private readonly mail: MailService,
   ) {}
   async getDashboardInfo() {
     const newUserPromise = await this.users.countNewUser();
@@ -51,5 +55,97 @@ export class AdminService {
       aggregateCompletedExams,
       mostCompletedExams,
     };
+  }
+
+  async getUsersInfo(page: number, search?: string) {
+    const quantity = 20;
+    let totalUsersPromise;
+    if (page === 0) {
+      totalUsersPromise = this.prisma.user.count();
+    }
+    const usersPromise = this.prisma.user.findMany({
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        email: true,
+        phone: true,
+        profileImg: true,
+        createdAt: true,
+      },
+      where: search
+        ? {
+            OR: [
+              {
+                username: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              },
+              {
+                name: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              },
+              {
+                email: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              },
+              {
+                phone: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              },
+            ],
+          }
+        : undefined,
+      take: quantity,
+      skip: quantity * page,
+    });
+    const [totalUser, users] = await Promise.all([
+      totalUsersPromise,
+      usersPromise,
+    ]);
+    return {
+      users,
+      totalPages: totalUser ? Math.ceil(totalUser / quantity) : undefined,
+    };
+  }
+
+  async removeUsers(ids: number[]) {
+    return this.users.removeUsers(ids);
+  }
+
+  async sendMail({
+    ids,
+    title,
+    content,
+  }: {
+    ids: number[];
+    title: string;
+    content: string;
+  }) {
+    const users = await this.prisma.user.findMany({
+      where: {
+        id: { in: ids },
+      },
+      select: {
+        username: true,
+        email: true,
+      },
+    });
+    const validUsers = users.filter((user) => user.email);
+    const sendMailPromise = validUsers.map((user) => {
+      return this.mail.sendEmail({
+        email: user.email,
+        subject: title,
+        content,
+      });
+    });
+    return await Promise.all(sendMailPromise);
   }
 }
