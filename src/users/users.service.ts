@@ -12,6 +12,8 @@ import * as bcrypt from 'bcrypt';
 import { use } from 'passport';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { ExamEntity } from 'src/exam/entities/exam.entity';
+import Ultis from 'src/Utils/Ultis';
+import { Period } from 'src/types/type';
 
 @Injectable()
 export class UsersService {
@@ -187,5 +189,37 @@ export class UsersService {
       },
     });
     return { exams: exams.map((exam) => exam.exam) };
+  }
+
+  async countNewUser(period: Period = 'week') {
+    const beginDate = Ultis.getBeginDate(period, new Date());
+    return this.prisma.user.count({
+      where: {
+        createdAt: {
+          gte: beginDate,
+        },
+      },
+    });
+  }
+
+  async aggregateUsers() {
+    const usersByMonths: { createdAt: string; count: number }[] = await this
+      .prisma.$queryRaw`
+    SELECT
+    DATE_TRUNC('month',"createdAt")
+      AS  "createdAt",
+    COUNT(id)::int AS count
+    FROM "User"
+    GROUP BY DATE_TRUNC('month',"createdAt");`;
+    const data = usersByMonths
+      .map((usersByMonth) => ({
+        month: new Date(usersByMonth.createdAt).getMonth() + 1,
+        count: usersByMonth.count,
+      }))
+      .sort((a, b) => a.month - b.month);
+    return {
+      label: 'Người dùng mới',
+      data,
+    };
   }
 }

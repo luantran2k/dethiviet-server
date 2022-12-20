@@ -11,6 +11,7 @@ import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { PartsService } from 'src/parts/parts.service';
 import QuestionEntity from 'src/questions/entities/question.entity';
 import QuestionTypeDatas from 'src/questions/QuestionTypes';
+import { Period } from 'src/types/type';
 import Ultis from 'src/Utils/Ultis';
 import { AnswerEntityWithCheck } from './../answers/entities/answer.entity';
 import { PrismaService } from './../prisma/prisma.service';
@@ -31,6 +32,26 @@ export interface QuestionResult extends Partial<QuestionEntity> {
 
 @Injectable()
 export class ExamService {
+  private readonly selectUser = {
+    id: true,
+    name: true,
+    username: true,
+    profileImg: true,
+  };
+  private readonly selectExam = {
+    id: true,
+    isPublic: true,
+    ownerId: true,
+    title: true,
+    date: true,
+    subjectName: true,
+    grade: true,
+    createdAt: true,
+    isSuggest: true,
+    owner: {
+      select: this.selectUser,
+    },
+  };
   constructor(
     private prisma: PrismaService,
     private readonly cloudinary: CloudinaryService,
@@ -762,5 +783,111 @@ export class ExamService {
       where: { id: examId },
       data: { isSuggest: false },
     });
+  }
+  async countNewExams(period: Period = 'week') {
+    const beginDate = Ultis.getBeginDate(period, new Date());
+    return this.prisma.exam.count({
+      where: {
+        createdAt: {
+          gte: beginDate,
+        },
+      },
+    });
+  }
+  async countCompletedExams(period: Period = 'week') {
+    const beginDate = Ultis.getBeginDate(period, new Date());
+    return this.prisma.userCompleteExam.count({
+      where: {
+        completeAt: {
+          gte: beginDate,
+        },
+      },
+    });
+  }
+
+  async aggregateExams() {
+    const examsByMonths: { createdAt: string; count: number }[] = await this
+      .prisma.$queryRaw`
+    SELECT
+    DATE_TRUNC('month',"createdAt")
+      AS  "createdAt",
+    COUNT(id)::int AS count
+    FROM "Exam"
+    GROUP BY DATE_TRUNC('month',"createdAt");`;
+    const data = examsByMonths
+      .map((examsByMonth) => ({
+        month: new Date(examsByMonth.createdAt).getMonth() + 1,
+        count: examsByMonth.count,
+      }))
+      .sort((a, b) => a.month - b.month);
+    return {
+      label: 'Đề thi mới',
+      data,
+    };
+  }
+
+  async aggregateCompletedExams() {
+    const examsByMonths: { completeAt: string; count: number }[] = await this
+      .prisma.$queryRaw`
+    SELECT
+    DATE_TRUNC('month',"completeAt")
+      AS  "completeAt",
+    COUNT(id)::int AS count
+    FROM "UserCompleteExam"
+    GROUP BY DATE_TRUNC('month',"completeAt");`;
+    const data = examsByMonths
+      .map((examsByMonth) => ({
+        month: new Date(examsByMonth.completeAt).getMonth() + 1,
+        count: examsByMonth.count,
+      }))
+      .sort((a, b) => a.month - b.month);
+    return {
+      label: 'Lượt thi mới',
+      data,
+    };
+  }
+
+  async mostCompletedExams() {
+    const examsWithCount = await this.prisma.userCompleteExam.groupBy({
+      by: ['examId'],
+      where: {
+        exam: {
+          isPublic: true,
+        },
+        completeAt: {
+          gte: Ultis.getThisFirstDateOfMonth(),
+          lte: Ultis.getThisLastDateOfMonth(),
+        },
+      },
+      _count: {
+        completeAt: true,
+      },
+      orderBy: {
+        _count: {
+          completeAt: 'desc',
+        },
+      },
+    });
+
+    const examPromises = examsWithCount.map(async (exam) => {
+      return {
+        exam: await this.prisma.exam.findFirst({
+          where: { id: exam.examId, isPublic: true },
+          select: {
+            title: true,
+            id: true,
+            subjectName: true,
+            owner: {
+              select: this.selectUser,
+            },
+          },
+        }),
+        completedCount: exam._count,
+      };
+    });
+    return (await Promise.all(examPromises)).map((exam) => ({
+      ...exam.exam,
+      completedCount: exam.completedCount.completeAt,
+    }));
   }
 }

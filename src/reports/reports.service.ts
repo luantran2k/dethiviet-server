@@ -1,6 +1,7 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Period } from 'src/types/type';
 import Ultis from 'src/Utils/Ultis';
 import { CreateReportDto } from './dto/create-report.dto';
 import { UpdateReportDto } from './dto/update-report.dto';
@@ -86,6 +87,19 @@ export class ReportsService {
             id: true,
             title: true,
           },
+        },
+      },
+    });
+  }
+  countNewReport(period: Period = 'week') {
+    const beginDate = Ultis.getBeginDate(period, new Date());
+    return this.prisma.report.count({
+      where: {
+        examId: {
+          equals: null,
+        },
+        createdAt: {
+          gte: beginDate,
         },
       },
     });

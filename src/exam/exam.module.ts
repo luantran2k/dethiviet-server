@@ -13,6 +13,7 @@ import { ExamService } from './exam.service';
   imports: [PrismaModule, AuthModule, CloudinaryModule, PartsModule],
   controllers: [ExamController],
   providers: [ExamService],
+  exports: [ExamService],
 })
 export class ExamModule {
   constructor() {

@@ -2,6 +2,7 @@ import { InternalServerErrorException } from '@nestjs/common/exceptions';
 import { createWriteStream, unlink } from 'fs';
 import { get } from 'https';
 import muhammara, { createReader, recrypt } from 'muhammara';
+import { Period } from 'src/types/type';
 const Ultis = {
   getPublicId: (url: string) => {
     const index = url.indexOf(process.env.CLOUDINARY_ROOT_FOLDER + '/' || '/');
@@ -76,6 +77,32 @@ const Ultis = {
       userProtectionFlag: 4,
     });
     return outputPath;
+  },
+  getMonday(date: Date) {
+    const day = date.getDay(),
+      diff = date.getDate() - day + (day == 0 ? -6 : 1); // adjust when day is sunday
+    return new Date(date.setDate(diff));
+  },
+  getFirstDayOfMonth(d: Date) {
+    const date = new Date(d);
+    return new Date(date.getFullYear(), date.getMonth(), 1);
+  },
+  getLastDayOfMonth(d: Date) {
+    const date = new Date(d);
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  },
+  getFirstDayOfYear(d: Date) {
+    return new Date(new Date().getFullYear(), 0, 1);
+  },
+  getLastDayOfYear(d: Date) {
+    return new Date(new Date().getFullYear(), 11, 31);
+  },
+  getBeginDate(period: Period, date): Date {
+    return period === 'week'
+      ? this.getMonday(date)
+      : period === 'month'
+      ? this.getFirstDayOfMonth(date)
+      : this.getFirstDayOfYear(date);
   },
 };
 export default Ultis;

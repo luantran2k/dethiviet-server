@@ -26,6 +26,6 @@ export class AccessTokenStrategy extends PassportStrategy(Strategy, 'jwt') {
     if (!user.refreshToken) {
       throw new UnauthorizedException('Vui lòng đăng nhập');
     }
-    return payload;
+    return { ...payload, role: user.role };
   }
 }
