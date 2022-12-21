@@ -61,7 +61,38 @@ export class AdminService {
     const quantity = 20;
     let totalUsersPromise;
     if (page === 0) {
-      totalUsersPromise = this.prisma.user.count();
+      totalUsersPromise = this.prisma.user.count({
+        where: search
+          ? {
+              OR: [
+                {
+                  username: {
+                    contains: search,
+                    mode: 'insensitive',
+                  },
+                },
+                {
+                  name: {
+                    contains: search,
+                    mode: 'insensitive',
+                  },
+                },
+                {
+                  email: {
+                    contains: search,
+                    mode: 'insensitive',
+                  },
+                },
+                {
+                  phone: {
+                    contains: search,
+                    mode: 'insensitive',
+                  },
+                },
+              ],
+            }
+          : undefined,
+      });
     }
     const usersPromise = this.prisma.user.findMany({
       select: {
@@ -156,7 +187,32 @@ export class AdminService {
     const quantity = 20;
     let totalExamsPromise;
     if (page === 0) {
-      totalExamsPromise = this.prisma.exam.count();
+      totalExamsPromise = this.prisma.exam.count({
+        where: search
+          ? {
+              OR: [
+                {
+                  title: {
+                    contains: search,
+                    mode: 'insensitive',
+                  },
+                },
+                {
+                  subjectName: {
+                    contains: search,
+                    mode: 'insensitive',
+                  },
+                },
+                {
+                  examName: {
+                    contains: search,
+                    mode: 'insensitive',
+                  },
+                },
+              ],
+            }
+          : undefined,
+      });
     }
     const examsPromise = this.prisma.exam.findMany({
       select: {
@@ -226,5 +282,126 @@ export class AdminService {
         id: { in: ids },
       },
     });
+  }
+
+  async getReportStates() {
+    const statesTemp = await this.prisma.report.groupBy({
+      by: ['state'],
+      _count: {
+        id: true,
+      },
+      where: {
+        examId: null,
+      },
+    });
+    return statesTemp.reduce(
+      (states, state) => ({
+        ...states,
+        [state.state]: state._count.id,
+      }),
+      {},
+    );
+  }
+
+  async getReportsInfo(page: number, search?: string, state?: string) {
+    const quantity = 20;
+    let totalReportsPromise;
+    let statesPromise;
+    if (page === 0) {
+      statesPromise = this.getReportStates();
+      totalReportsPromise = this.prisma.report.count({
+        where: {
+          examId: null,
+          ...(search
+            ? {
+                OR: [
+                  {
+                    content: {
+                      contains: search,
+                      mode: 'insensitive',
+                    },
+                  },
+                  {
+                    user: {
+                      username: {
+                        contains: search,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                ],
+              }
+            : {}),
+          ...(state
+            ? {
+                state: state,
+              }
+            : {}),
+        },
+      });
+    }
+    let reportsPromise = this.prisma.report.findMany({
+      take: quantity,
+      skip: quantity * page,
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+          },
+        },
+      },
+      where: {
+        examId: null,
+        ...(search
+          ? {
+              OR: [
+                {
+                  content: {
+                    contains: search,
+                    mode: 'insensitive',
+                  },
+                },
+                {
+                  user: {
+                    username: {
+                      contains: search,
+                      mode: 'insensitive',
+                    },
+                  },
+                },
+              ],
+            }
+          : {}),
+        ...(state
+          ? {
+              state: state,
+            }
+          : {}),
+      },
+    });
+
+    const [states, reports, totalReports] = await Promise.all([
+      statesPromise,
+      reportsPromise,
+      totalReportsPromise,
+    ]);
+    return {
+      reports,
+      states,
+      totalPages: totalReports ? Math.ceil(totalReports / quantity) : undefined,
+    };
+  }
+
+  async updateReportState({ id, state }: { id: number; state: string }) {
+    const updateResult = await this.prisma.report.update({
+      where: { id },
+      data: { state },
+    });
+    const states = await this.getReportStates();
+    return {
+      states,
+      updateResult,
+    };
   }
 }
