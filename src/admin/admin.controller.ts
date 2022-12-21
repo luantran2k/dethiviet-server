@@ -38,12 +38,26 @@ export class AdminController {
   }
 
   @Post('users/remove')
-  deletUsers(@Body() body: { ids: number[] }) {
+  deleteUsers(@Body() body: { ids: number[] }) {
     return this.adminSerivce.removeUsers(body.ids);
   }
 
   @Post('users/mail')
   sendMail(@Body() body: { ids: number[]; title: string; content: string }) {
     return this.adminSerivce.sendMail(body);
+  }
+
+  @Get('exams')
+  getExamsInfo(
+    @Req() req,
+    @Query('page', new DefaultValuePipe(0), ParseIntPipe) page: number,
+    @Query('search') search?: string,
+  ) {
+    return this.adminSerivce.getExamsInfo(page, search);
+  }
+
+  @Post('exams/remove')
+  deleteExams(@Body() body: { ids: number[] }) {
+    return this.adminSerivce.removeExams(body.ids);
   }
 }

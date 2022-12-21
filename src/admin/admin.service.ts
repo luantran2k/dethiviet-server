@@ -105,6 +105,9 @@ export class AdminService {
         : undefined,
       take: quantity,
       skip: quantity * page,
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
     const [totalUser, users] = await Promise.all([
       totalUsersPromise,
@@ -147,5 +150,81 @@ export class AdminService {
       });
     });
     return await Promise.all(sendMailPromise);
+  }
+
+  async getExamsInfo(page: number, search?: string) {
+    const quantity = 20;
+    let totalExamsPromise;
+    if (page === 0) {
+      totalExamsPromise = this.prisma.exam.count();
+    }
+    const examsPromise = this.prisma.exam.findMany({
+      select: {
+        id: true,
+        title: true,
+        isPublic: true,
+        securityCode: true,
+        duration: true,
+        type: true,
+        examName: true,
+        subjectName: true,
+        documentUrl: true,
+        isOriginal: true,
+        isSuggest: true,
+        createdAt: true,
+        updatedAt: true,
+        owner: {
+          select: {
+            id: true,
+            username: true,
+          },
+        },
+      },
+      where: search
+        ? {
+            OR: [
+              {
+                title: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              },
+              {
+                subjectName: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              },
+              {
+                examName: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              },
+            ],
+          }
+        : undefined,
+      take: quantity,
+      skip: quantity * page,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+    const [totalExams, exams] = await Promise.all([
+      totalExamsPromise,
+      examsPromise,
+    ]);
+    return {
+      exams,
+      totalPages: totalExams ? Math.ceil(totalExams / quantity) : undefined,
+    };
+  }
+
+  async removeExams(ids: number[]) {
+    return this.prisma.exam.deleteMany({
+      where: {
+        id: { in: ids },
+      },
+    });
   }
 }
